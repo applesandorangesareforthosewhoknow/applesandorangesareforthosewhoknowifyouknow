@@ -10,8 +10,7 @@ local tabBtns=new("Frame",wnd) tabBtns.Size=UDim2.new(0,100,1,0) tabBtns.Backgro
 local tabCont=new("Frame",wnd) tabCont.Position=UDim2.new(0,100,0,0) tabCont.Size=UDim2.new(1,-100,1,0)
 tabCont.BackgroundColor3=Color3.fromRGB(40,40,40)
 
-local tabs={} -- array of {btn,cont,buttons,toggles,sliders,dropdowns}
-
+local tabs={}
 local activeTab=0
 
 local function clearChildren(p)
@@ -19,21 +18,18 @@ local function clearChildren(p)
 end
 
 local function updateCanvas(tab)
-    local count=#tab.buttons+#tab.toggles+#tab.sliders+#tab.dropdowns
-    local size=0
-    if #tab.sliders>0 then size=size+#tab.sliders*45 else size=size+#tab.sliders*0 end
-    size= size + #tab.buttons*35 + #tab.toggles*35 + #tab.dropdowns*35
+    local size = #tab.buttons*35 + #tab.toggles*35 + #tab.sliders*45 + #tab.dropdowns*35
     tab.cont.CanvasSize=UDim2.new(0,0,0,size)
 end
 
 local function selectTab(i)
     if activeTab==i then return end
     for j=1,#tabs do
-        tabs[j][1].BackgroundColor3=Color3.fromRGB(20,20,20)
-        tabs[j][2].Visible=false
+        tabs[j].btn.BackgroundColor3=Color3.fromRGB(20,20,20)
+        tabs[j].cont.Visible=false
     end
-    tabs[i][1].BackgroundColor3=Color3.fromRGB(60,60,60)
-    tabs[i][2].Visible=true
+    tabs[i].btn.BackgroundColor3=Color3.fromRGB(60,60,60)
+    tabs[i].cont.Visible=true
     activeTab=i
 end
 
@@ -49,11 +45,25 @@ function u.newWindow(name)
     tcont.Visible=false
     tcont.CanvasSize=UDim2.new(0,0,1,0)
     tcont.ScrollBarThickness=6
-    local e={btn=tbtn,cont=tcont,buttons={},toggles={},sliders={},dropdowns={}}
-    T(tabs,e)
+    local tab = {
+        btn = tbtn,
+        cont = tcont,
+        buttons = {},
+        toggles = {},
+        sliders = {},
+        dropdowns = {}
+    }
+    T(tabs, tab)
     tbtn.MouseButton1Click:Connect(function() selectTab(#tabs) end)
     if #tabs==1 then selectTab(1) end
-    return e
+
+    -- Add instance methods
+    function tab.addButton(text, cb) u.addButton(tab, text, cb) end
+    function tab.addToggle(text, cb) u.addToggle(tab, text, cb) end
+    function tab.addSlider(text, min, max, cb) u.addSlider(tab, text, min, max, cb) end
+    function tab.addDropdown(text, list, cb) u.addDropdown(tab, text, list, cb) end
+
+    return tab
 end
 
 function u.addButton(tab,text,callback)
@@ -160,7 +170,6 @@ function u.addDropdown(tab,text,options,callback)
     list.Visible=false
     list.CanvasSize=UDim2.new(0,0,0,0)
     list.ScrollBarThickness=6
-    local items={}
     local function rebuild()
         clearChildren(list)
         for i=1,#options do
@@ -175,7 +184,6 @@ function u.addDropdown(tab,text,options,callback)
                 callback(options[i])
                 list.Visible=false
             end)
-            items[i]=it
         end
         list.CanvasSize=UDim2.new(0,0,0,#options*20)
     end
@@ -185,7 +193,7 @@ function u.addDropdown(tab,text,options,callback)
     updateCanvas(tab)
 end
 
--- Notifications (simple)
+-- Notifications
 local notifFrame=new("Frame",u.ui)
 notifFrame.Size=UDim2.new(0,300,0,100)
 notifFrame.Position=UDim2.new(1,-310,0,10)
@@ -214,7 +222,7 @@ function u.notify(txt,time)
     end)
 end
 
--- Player Joined/Left
+-- Player events
 local joinedListeners={}
 local leftListeners={}
 Players.PlayerAdded:Connect(function(p)
@@ -227,7 +235,7 @@ end)
 function u.onPlayerJoin(fn) T(joinedListeners,fn) end
 function u.onPlayerLeave(fn) T(leftListeners,fn) end
 
--- Visibility toggle on Delete key
+-- Toggle UI with Delete
 UserInputService.InputBegan:Connect(function(input,gp)
     if gp then return end
     if input.KeyCode==Enum.KeyCode.Delete then
