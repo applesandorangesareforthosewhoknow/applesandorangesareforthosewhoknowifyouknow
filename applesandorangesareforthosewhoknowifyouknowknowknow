@@ -1,7 +1,6 @@
 local u={};local c=game:GetService'CoreGui';local UserInputService=game:GetService'UserInputService';local Players=game:GetService'Players'
 local Core=Instance.new;local T=table.insert
 local function new(cls,p) local o=Core(cls) if p then o.Parent=p end return o end
-local function mkTxt(t,x,y,w,h,txt,s) t.Position=UDim2.new(x,0,y,0) t.Size=UDim2.new(w,0,h,0) t.Text=txt or"" t.Font=s or Enum.Font.SourceSans t.TextSize=14 t.TextColor3=Color3.new(1,1,1) t.BackgroundTransparency=1 t.TextXAlignment=Enum.TextXAlignment.Left return t end
 
 u.ui=new("ScreenGui",c);u.ui.Name="ULib"
 local wnd=new("Frame",u.ui) wnd.Size=UDim2.new(0,350,0,400) wnd.Position=UDim2.new(0.5,-175,0.5,-200)
@@ -11,11 +10,20 @@ local tabBtns=new("Frame",wnd) tabBtns.Size=UDim2.new(0,100,1,0) tabBtns.Backgro
 local tabCont=new("Frame",wnd) tabCont.Position=UDim2.new(0,100,0,0) tabCont.Size=UDim2.new(1,-100,1,0)
 tabCont.BackgroundColor3=Color3.fromRGB(40,40,40)
 
-local tabs={} -- array of {btn,content}
+local tabs={} -- array of {btn,cont,buttons,toggles,sliders,dropdowns}
+
 local activeTab=0
 
 local function clearChildren(p)
     for i=1,#p:GetChildren() do p:GetChildren()[i]:Destroy() end
+end
+
+local function updateCanvas(tab)
+    local count=#tab.buttons+#tab.toggles+#tab.sliders+#tab.dropdowns
+    local size=0
+    if #tab.sliders>0 then size=size+#tab.sliders*45 else size=size+#tab.sliders*0 end
+    size= size + #tab.buttons*35 + #tab.toggles*35 + #tab.dropdowns*35
+    tab.cont.CanvasSize=UDim2.new(0,0,0,size)
 end
 
 local function selectTab(i)
@@ -48,7 +56,6 @@ function u.newWindow(name)
     return e
 end
 
--- Button
 function u.addButton(tab,text,callback)
     local b=new("TextButton",tab.cont)
     b.Size=UDim2.new(1,-10,0,30)
@@ -58,10 +65,9 @@ function u.addButton(tab,text,callback)
     b.AutoButtonColor=false
     b.MouseButton1Click:Connect(callback)
     T(tab.buttons,b)
-    tab.cont.CanvasSize=UDim2.new(0,0,0,#tab.buttons*35)
+    updateCanvas(tab)
 end
 
--- Toggle
 function u.addToggle(tab,text,callback)
     local f=new("Frame",tab.cont)
     f.Size=UDim2.new(1,-10,0,30)
@@ -89,10 +95,9 @@ function u.addToggle(tab,text,callback)
     tbtn.MouseButton1Click:Connect(function() setVal(not val) end)
     setVal(false)
     T(tab.toggles,f)
-    tab.cont.CanvasSize=UDim2.new(0,0,0,#tab.buttons*35+#tab.toggles*35)
+    updateCanvas(tab)
 end
 
--- Slider
 function u.addSlider(tab,text,min,max,callback)
     local f=new("Frame",tab.cont)
     f.Size=UDim2.new(1,-10,0,40)
@@ -128,10 +133,9 @@ function u.addSlider(tab,text,min,max,callback)
         if dragging and i.UserInputType==Enum.UserInputType.MouseMovement then setVal(i.Position.X) end
     end)
     T(tab.sliders,f)
-    tab.cont.CanvasSize=UDim2.new(0,0,0,#tab.buttons*35+#tab.toggles*35+#tab.sliders*45)
+    updateCanvas(tab)
 end
 
--- Dropdown
 function u.addDropdown(tab,text,options,callback)
     local f=new("Frame",tab.cont)
     f.Size=UDim2.new(1,-10,0,30)
@@ -178,7 +182,7 @@ function u.addDropdown(tab,text,options,callback)
     dropdownBtn.MouseButton1Click:Connect(function() list.Visible=not list.Visible end)
     rebuild()
     T(tab.dropdowns,f)
-    tab.cont.CanvasSize=UDim2.new(0,0,0,#tab.buttons*35+#tab.toggles*35+#tab.sliders*45+#tab.dropdowns*35+100)
+    updateCanvas(tab)
 end
 
 -- Notifications (simple)
