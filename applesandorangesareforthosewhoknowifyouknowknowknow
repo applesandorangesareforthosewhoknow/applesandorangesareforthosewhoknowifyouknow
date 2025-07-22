@@ -1,3 +1,5 @@
+-- Full optimized UI library with fixed auto‑growing notifications
+
 local CoreGui       = game:GetService("CoreGui")
 local UserInput     = game:GetService("UserInputService")
 local Players       = game:GetService("Players")
@@ -60,11 +62,10 @@ tabCont.BackgroundColor3 = Color3.fromRGB(40,40,40)
 -- Notification panel (top‑right, auto‑growing Frame)
 local notifFrame = new("Frame", screen)
 notifFrame.Name               = "Notifications"
-notifFrame.Size               = UDim2.new(0,300,0,0)  -- height auto‑sized
+notifFrame.Size               = UDim2.new(0,300,0,0)
 notifFrame.Position           = UDim2.new(1,-310,0,10)
 notifFrame.BackgroundTransparency = 1
-notifFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y  -- enable auto grow
-
+notifFrame.AutomaticSize      = Enum.AutomaticSize.Y
 local notifLayout = Instance.new("UIListLayout", notifFrame)
 notifLayout.SortOrder = Enum.SortOrder.LayoutOrder
 notifLayout.Padding   = UDim.new(0, 4)
@@ -86,7 +87,6 @@ function u.newWindow(name)
     cont.Visible             = false
     cont.AutomaticCanvasSize = Enum.AutomaticSize.Y
     cont.ScrollBarThickness  = 6
-
     local layout = Instance.new("UIListLayout", cont)
     layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.Padding   = UDim.new(0,4)
@@ -159,7 +159,7 @@ function u.addSlider(tab, text, min, max, cb)
         if i.UserInputType == Enum.UserInputType.MouseButton1 then
             local mv, up
             mv = UserInput.InputChanged:Connect(function(m)
-                if m.UserInputType == Enum.UserInputType.MouseMovement then
+                if m.UserInputType==Enum.UserInputType.MouseMovement then
                     local x = math.clamp((m.Position.X-fr.AbsolutePosition.X)/fr.AbsoluteSize.X,0,1)
                     sl.Size = UDim2.new(x,0,1,0)
                     local v = math.floor(min + (max-min)*x)
