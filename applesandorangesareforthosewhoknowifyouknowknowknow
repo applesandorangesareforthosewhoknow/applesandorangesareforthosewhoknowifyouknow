@@ -69,7 +69,9 @@ function G.newWindow(title)
 
 		b.MouseButton1Click:Connect(function()
 			for i = 1, #tabs do
-				tabs[i][2].Visible = false
+				if tabs[i] and tabs[i][2] then
+					tabs[i][2].Visible = false
+				end
 			end
 			content.Visible = true
 		end)
