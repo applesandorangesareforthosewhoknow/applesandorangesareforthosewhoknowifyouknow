@@ -26,7 +26,8 @@ function G.newWindow(title)
 	W.Size = UDim2.new(0, 500, 0, 400)
 	W.Position = UDim2.new(0.5, -250, 0.5, -200)
 	W.AnchorPoint = Vector2.new(0.5, 0.5)
-	W.Active = false
+	W.Active = true
+	W.Draggable = false
 
 	local H = Instance.new("TextLabel", W)
 	H.Text = title
@@ -35,25 +36,8 @@ function G.newWindow(title)
 	H.Size = UDim2.new(1, 0, 0, 30)
 	H.Font = Enum.Font.SourceSans
 	H.TextSize = 24
-
-	local dragging, offset
-	H.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = true
-			offset = Vector2.new(input.Position.X - W.Position.X.Offset, input.Position.Y - W.Position.Y.Offset)
-		end
-	end)
-	UIS.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = false
-		end
-	end)
-	RS.RenderStepped:Connect(function()
-		if dragging then
-			local mouse = UIS:GetMouseLocation()
-			W.Position = UDim2.new(0, mouse.X - offset.X, 0, mouse.Y - offset.Y)
-		end
-	end)
+	H.Active = true
+	H.Draggable = true
 
 	local tabHolder = Instance.new("Frame", W)
 	tabHolder.Position = UDim2.new(0, 0, 0, 30)
@@ -87,8 +71,9 @@ function G.newWindow(title)
 
 		b.MouseButton1Click:Connect(function()
 			for i = 1, #tabs do
-				if tabs[i] and tabs[i][2] then
-					tabs[i][2].Visible = false
+				local t = tabs[i]
+				if type(t) == "table" and t[2] then
+					t[2].Visible = false
 				end
 			end
 			content.Visible = true
