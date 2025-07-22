@@ -65,7 +65,6 @@ function u.newWindow(name)
 
     local cont=new("ScrollingFrame",tabCont)
     cont.Size=UDim2.new(1,0,1,0)
-    cont.Position=UDim2.new(0,0,0,0)
     cont.BackgroundColor3=Color3.fromRGB(40,40,40)
     cont.Visible=false
     cont.AutomaticCanvasSize=Enum.AutomaticSize.Y
@@ -211,8 +210,7 @@ function u.addWalkspeed(tab)
             local n=tonumber(tb.Text)
             if n then
                 local p=Players.LocalPlayer
-                p.Character and p.Character:FindFirstChild("Humanoid") and 
-                    (p.Character.Humanoid.WalkSpeed=n)
+                p.Character and p.Character:FindFirstChild("Humanoid") and (p.Character.Humanoid.WalkSpeed=n)
             end
         end
     end)
@@ -231,8 +229,7 @@ function u.addJumpPower(tab)
             local n=tonumber(tb.Text)
             if n then
                 local p=Players.LocalPlayer
-                p.Character and p.Character:FindFirstChild("Humanoid") and 
-                    (p.Character.Humanoid.JumpPower=n)
+                p.Character and p.Character:FindFirstChild("Humanoid") and (p.Character.Humanoid.JumpPower=n)
             end
         end
     end)
@@ -254,6 +251,7 @@ end)
 Players.PlayerRemoving:Connect(function(p)
     for i=1,#leaveListeners do leaveListeners[i](p) end
 end)
+
 function u.onPlayerJoin(cb) T(joinListeners,cb) end
 function u.onPlayerLeave(cb) T(leaveListeners,cb) end
 
