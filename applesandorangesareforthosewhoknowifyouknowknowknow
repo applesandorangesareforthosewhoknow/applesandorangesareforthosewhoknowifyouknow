@@ -9,7 +9,7 @@ local joinListeners  = {}
 local leaveListeners = {}
 
 local function T(t,v) t[#t+1]=v end
-local function new(c,p)local i=Instance.new(c)i.Parent=p return i end
+local function new(c,p) local i=Instance.new(c) i.Parent=p return i end
 
 local screen=new("ScreenGui",CoreGui)
 screen.IgnoreGuiInset=true
@@ -18,7 +18,7 @@ screen.Enabled=true
 
 UserInput.InputBegan:Connect(function(i,gp)
     if not gp and i.KeyCode==Enum.KeyCode.Delete then
-        screen.Enabled=not screen.Enabled
+        screen.Enabled = not screen.Enabled
     end
 end)
 
@@ -65,6 +65,7 @@ function u.newWindow(name)
 
     local cont=new("ScrollingFrame",tabCont)
     cont.Size=UDim2.new(1,0,1,0)
+    cont.Position=UDim2.new(0,0,0,0)
     cont.BackgroundColor3=Color3.fromRGB(40,40,40)
     cont.Visible=false
     cont.AutomaticCanvasSize=Enum.AutomaticSize.Y
@@ -127,6 +128,7 @@ function u.addSlider(tab,text,min,max,cb)
     local sl=new("TextButton",fr)
     sl.Size=UDim2.new(0,0,1,0)
     sl.BackgroundColor3=Color3.fromRGB(70,70,70)
+    sl.Text=""
     sl.AutoButtonColor=false
     sl.InputBegan:Connect(function(i)
         if i.UserInputType==Enum.UserInputType.MouseButton1 then
@@ -195,7 +197,6 @@ end)
 Players.PlayerRemoving:Connect(function(p)
     for i=1,#leaveListeners do leaveListeners[i](p) end
 end)
-
 function u.onPlayerJoin(cb) T(joinListeners,cb) end
 function u.onPlayerLeave(cb) T(leaveListeners,cb) end
 
