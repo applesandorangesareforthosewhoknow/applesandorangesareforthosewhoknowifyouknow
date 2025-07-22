@@ -9,7 +9,7 @@ local joinListeners  = {}
 local leaveListeners = {}
 
 local function T(t,v) t[#t+1]=v end
-local function new(c,p) local i=Instance.new(c) i.Parent=p return i end
+local function new(c,p)local i=Instance.new(c)i.Parent=p return i end
 
 local screen=new("ScreenGui",CoreGui)
 screen.IgnoreGuiInset=true
@@ -18,7 +18,7 @@ screen.Enabled=true
 
 UserInput.InputBegan:Connect(function(i,gp)
     if not gp and i.KeyCode==Enum.KeyCode.Delete then
-        screen.Enabled = not screen.Enabled
+        screen.Enabled=not screen.Enabled
     end
 end)
 
@@ -74,7 +74,7 @@ function u.newWindow(name)
     layout.SortOrder=Enum.SortOrder.LayoutOrder
     layout.Padding=UDim.new(0,4)
 
-    local tab={btn,cont,{}, {}, {}, {}}
+    local tab={btn,cont,{}, {}, {}, {}, {}}
     T(tabs,tab)
 
     btn.MouseButton1Click:Connect(function() selectTab(#tabs) end)
@@ -84,6 +84,9 @@ function u.newWindow(name)
     function tab.addToggle(t,cb)    u.addToggle(tab,t,cb)    end
     function tab.addSlider(t,m,M,cb) u.addSlider(tab,t,m,M,cb) end
     function tab.addDropdown(t,ls,cb)u.addDropdown(tab,t,ls,cb) end
+    function tab.addTextbox(t,d,cb) u.addTextbox(tab,t,d,cb) end
+    function tab.addWalkspeed(d)    u.addWalkspeed(tab,d)    end
+    function tab.addJumpPower(d)    u.addJumpPower(tab,d)    end
 
     return tab
 end
@@ -179,6 +182,44 @@ function u.addDropdown(tab,text,list,cb)
         end)
         T(opts,o)
     end
+end
+
+function u.addTextbox(tab, text, default, cb)
+    local tb=new("TextBox",tab[2])
+    tb.Size=UDim2.new(1,-10,0,30)
+    tb.BackgroundColor3=Color3.fromRGB(30,30,30)
+    tb.TextColor3=Color3.new(1,1,1)
+    tb.PlaceholderText=text
+    tb.Text=default or""
+    tb.ClearTextOnFocus=false
+    T(tab[7],tb)
+    tb.FocusLost:Connect(function(enter)
+        if enter then cb(tb.Text) end
+    end)
+end
+
+function u.addWalkspeed(tab,default)
+    u.addTextbox(tab,"WalkSpeed",tostring(default or 16),function(v)
+        local n=tonumber(v)
+        if n then
+            local p=Players.LocalPlayer
+            if p and p.Character and p.Character:FindFirstChild("Humanoid") then
+                p.Character.Humanoid.WalkSpeed=n
+            end
+        end
+    end)
+end
+
+function u.addJumpPower(tab,default)
+    u.addTextbox(tab,"JumpPower",tostring(default or 50),function(v)
+        local n=tonumber(v)
+        if n then
+            local p=Players.LocalPlayer
+            if p and p.Character and p.Character:FindFirstChild("Humanoid") then
+                p.Character.Humanoid.JumpPower=n
+            end
+        end
+    end)
 end
 
 function u.notify(txt,dur)
