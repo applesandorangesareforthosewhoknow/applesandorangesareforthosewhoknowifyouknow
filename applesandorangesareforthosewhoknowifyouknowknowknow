@@ -73,7 +73,7 @@ function u.newWindow(name)
     layout.SortOrder=Enum.SortOrder.LayoutOrder
     layout.Padding=UDim.new(0,4)
 
-    local tab={btn,cont,{}, {}, {}, {}, {}}
+    local tab={btn,cont,{}, {}, {}, {}}
     T(tabs,tab)
 
     btn.MouseButton1Click:Connect(function() selectTab(#tabs) end)
@@ -83,9 +83,6 @@ function u.newWindow(name)
     function tab.addToggle(t,cb)    u.addToggle(tab,t,cb)    end
     function tab.addSlider(t,m,M,cb) u.addSlider(tab,t,m,M,cb) end
     function tab.addDropdown(t,ls,cb)u.addDropdown(tab,t,ls,cb) end
-    function tab.addTextbox(t,d,cb) u.addTextbox(tab,t,d,cb) end
-    function tab.addWalkspeed()     u.addWalkspeed(tab)     end
-    function tab.addJumpPower()     u.addJumpPower(tab)     end
 
     return tab
 end
@@ -130,7 +127,6 @@ function u.addSlider(tab,text,min,max,cb)
     local sl=new("TextButton",fr)
     sl.Size=UDim2.new(0,0,1,0)
     sl.BackgroundColor3=Color3.fromRGB(70,70,70)
-    sl.Text=""
     sl.AutoButtonColor=false
     sl.InputBegan:Connect(function(i)
         if i.UserInputType==Enum.UserInputType.MouseButton1 then
@@ -181,58 +177,6 @@ function u.addDropdown(tab,text,list,cb)
         end)
         T(opts,o)
     end
-end
-
-function u.addTextbox(tab,text,default,cb)
-    local tb=new("TextBox",tab[2])
-    tb.Size=UDim2.new(1,-10,0,30)
-    tb.BackgroundColor3=Color3.fromRGB(30,30,30)
-    tb.TextColor3=Color3.new(1,1,1)
-    tb.PlaceholderText=text
-    tb.Text=default or""
-    tb.ClearTextOnFocus=false
-    T(tab[7],tb)
-    tb.FocusLost:Connect(function(enter)
-        if enter then cb(tb.Text) end
-    end)
-end
-
-function u.addWalkspeed(tab)
-    local tb=new("TextBox",tab[2])
-    tb.Size=UDim2.new(1,-10,0,30)
-    tb.BackgroundColor3=Color3.fromRGB(30,30,30)
-    tb.TextColor3=Color3.new(1,1,1)
-    tb.PlaceholderText="WalkSpeed"
-    tb.ClearTextOnFocus=false
-    T(tab[7],tb)
-    tb.FocusLost:Connect(function(enter)
-        if enter then
-            local n=tonumber(tb.Text)
-            if n then
-                local p=Players.LocalPlayer
-                p.Character and p.Character:FindFirstChild("Humanoid") and (p.Character.Humanoid.WalkSpeed=n)
-            end
-        end
-    end)
-end
-
-function u.addJumpPower(tab)
-    local tb=new("TextBox",tab[2])
-    tb.Size=UDim2.new(1,-10,0,30)
-    tb.BackgroundColor3=Color3.fromRGB(30,30,30)
-    tb.TextColor3=Color3.new(1,1,1)
-    tb.PlaceholderText="JumpPower"
-    tb.ClearTextOnFocus=false
-    T(tab[7],tb)
-    tb.FocusLost:Connect(function(enter)
-        if enter then
-            local n=tonumber(tb.Text)
-            if n then
-                local p=Players.LocalPlayer
-                p.Character and p.Character:FindFirstChild("Humanoid") and (p.Character.Humanoid.JumpPower=n)
-            end
-        end
-    end)
 end
 
 function u.notify(txt,dur)
