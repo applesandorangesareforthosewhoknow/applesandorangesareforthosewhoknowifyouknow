@@ -1,102 +1,220 @@
 local UIS = game:GetService("UserInputService")
-local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
+local RS = game:GetService("RunService")
+local P = game:GetService("Players")
+local LP = P.LocalPlayer
 
-local library = {}
+local G = {}
+local open = true
+local tabs = {}
 
-function library:CreateWindow(name)
-    local screen = Instance.new("ScreenGui", CoreGui)
-    screen.IgnoreGuiInset = true
-    screen.Name = name
-    screen.ResetOnSpawn = false
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ResetOnSpawn = false
 
-    local window = Instance.new("Frame", screen)
-    window.Size = UDim2.new(0, 600, 0, 400)
-    window.Position = UDim2.new(0.75, -300, 0.5, -200)
-    window.AnchorPoint = Vector2.new(0.5, 0.5)
-    window.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    window.BorderSizePixel = 0
+local notifHolder = Instance.new("Frame", ScreenGui)
+notifHolder.Position = UDim2.new(1, -220, 0, 20)
+notifHolder.Size = UDim2.new(0, 200, 1, -40)
+notifHolder.BackgroundTransparency = 1
 
-    local sidebar = Instance.new("Frame", window)
-    sidebar.Size = UDim2.new(0, 150, 1, 0)
-    sidebar.Position = UDim2.new(0, 0, 0, 0)
-    sidebar.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-    sidebar.BorderSizePixel = 0
+local notifList = Instance.new("UIListLayout", notifHolder)
+notifList.SortOrder = Enum.SortOrder.LayoutOrder
+notifList.Padding = UDim.new(0, 6)
 
-    local content = Instance.new("Frame", window)
-    content.Size = UDim2.new(1, -150, 1, 0)
-    content.Position = UDim2.new(0, 150, 0, 0)
-    content.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    content.BorderSizePixel = 0
+function G.newWindow(title)
+	local W = Instance.new("Frame", ScreenGui)
+	W.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+	W.Size = UDim2.new(0, 500, 0, 400)
+	W.Position = UDim2.new(0.5, -250, 0.5, -200)
+	W.AnchorPoint = Vector2.new(0.5, 0.5)
+	W.Active = true
+	W.Draggable = true
 
-    local sidebarLayout = Instance.new("UIListLayout", sidebar)
-    sidebarLayout.FillDirection = Enum.FillDirection.Vertical
-    sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    sidebarLayout.Padding = UDim.new(0, 4)
+	local H = Instance.new("TextLabel", W)
+	H.Text = title
+	H.TextColor3 = Color3.new(1, 1, 1)
+	H.BackgroundTransparency = 1
+	H.Size = UDim2.new(1, 0, 0, 30)
+	H.Font = Enum.Font.SourceSans
+	H.TextSize = 24
 
-    local currentTab
+	local tabHolder = Instance.new("Frame", W)
+	tabHolder.Position = UDim2.new(0, 0, 0, 30)
+	tabHolder.Size = UDim2.new(0, 120, 1, -30)
+	tabHolder.BackgroundColor3 = Color3.new(0.15, 0.15, 0.15)
 
-    local function createTab(name)
-        local btn = Instance.new("TextButton", sidebar)
-        btn.Size = UDim2.new(1, 0, 0, 30)
-        btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        btn.TextColor3 = Color3.new(1, 1, 1)
-        btn.Font = Enum.Font.SourceSansBold
-        btn.TextSize = 20
-        btn.Text = name
+	local tabList = Instance.new("UIListLayout", tabHolder)
+	tabList.SortOrder = Enum.SortOrder.LayoutOrder
+	tabList.Padding = UDim.new(0, 2)
 
-        local tabFrame = Instance.new("Frame", content)
-        tabFrame.Size = UDim2.new(1, 0, 1, 0)
-        tabFrame.BackgroundTransparency = 1
-        tabFrame.Visible = false
+	local content = Instance.new("Frame", W)
+	content.Position = UDim2.new(0, 120, 0, 30)
+	content.Size = UDim2.new(1, -120, 1, -30)
+	content.BackgroundColor3 = Color3.new(0.18, 0.18, 0.18)
+	content.ClipsDescendants = true
 
-        local layout = Instance.new("UIListLayout", tabFrame)
-        layout.SortOrder = Enum.SortOrder.LayoutOrder
-        layout.Padding = UDim.new(0, 8)
+	local list = Instance.new("UIListLayout", content)
+	list.SortOrder = Enum.SortOrder.LayoutOrder
+	list.Padding = UDim.new(0, 6)
 
-        btn.MouseButton1Click:Connect(function()
-            if currentTab then
-                currentTab.Visible = false
-            end
-            currentTab = tabFrame
-            currentTab.Visible = true
-        end)
+	local tab = {tabHolder, content, {}, {}, {}, {}, {}}
 
-        if not currentTab then
-            currentTab = tabFrame
-            currentTab.Visible = true
-        end
+	function tab.addTab(name)
+		local b = Instance.new("TextButton", tabHolder)
+		b.Size = UDim2.new(1, 0, 0, 30)
+		b.Text = name
+		b.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+		b.TextColor3 = Color3.new(1, 1, 1)
+		b.Font = Enum.Font.SourceSans
+		b.TextSize = 20
 
-        return tabFrame
-    end
+		b.MouseButton1Click:Connect(function()
+			for i = 1, #tabs do
+				tabs[i][2].Visible = false
+			end
+			content.Visible = true
+		end)
+	end
 
-    return {
-        CreateTab = createTab,
-        Notify = function(text, duration)
-            local holder = screen:FindFirstChild("NotifyHolder")
-            if not holder then
-                holder = Instance.new("Frame", screen)
-                holder.Name = "NotifyHolder"
-                holder.Size = UDim2.new(0, 300, 1, -20)
-                holder.Position = UDim2.new(1, -310, 0, 10)
-                holder.BackgroundTransparency = 1
-                local list = Instance.new("UIListLayout", holder)
-                list.SortOrder = Enum.SortOrder.LayoutOrder
-                list.Padding = UDim.new(0, 5)
-            end
+	function tab.addButton(name, f)
+		local b = Instance.new("TextButton", content)
+		b.Size = UDim2.new(1, -10, 0, 30)
+		b.Text = name
+		b.BackgroundColor3 = Color3.new(0.25, 0.25, 0.25)
+		b.TextColor3 = Color3.new(1, 1, 1)
+		b.Font = Enum.Font.SourceSans
+		b.TextSize = 20
+		b.MouseButton1Click:Connect(f)
+		tab[3][#tab[3]+1] = b
+	end
 
-            local label = Instance.new("TextLabel", holder)
-            label.Size = UDim2.new(1, 0, 0, 30)
-            label.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-            label.TextColor3 = Color3.new(1, 1, 1)
-            label.TextScaled = true
-            label.Text = text
+	function tab.addToggle(name, f)
+		local b = Instance.new("TextButton", content)
+		b.Size = UDim2.new(1, -10, 0, 30)
+		b.Text = name .. ": OFF"
+		b.BackgroundColor3 = Color3.new(0.25, 0.25, 0.25)
+		b.TextColor3 = Color3.new(1, 1, 1)
+		b.Font = Enum.Font.SourceSans
+		b.TextSize = 20
+		local state = false
+		b.MouseButton1Click:Connect(function()
+			state = not state
+			b.Text = name .. ": " .. (state and "ON" or "OFF")
+			f(state)
+		end)
+		tab[4][#tab[4]+1] = b
+	end
 
-            delay(duration or 3, function()
-                label:Destroy()
-            end)
-        end
-    }
+	function tab.addSlider(name, min, max, f)
+		local holder = Instance.new("Frame", content)
+		holder.Size = UDim2.new(1, -10, 0, 50)
+		holder.BackgroundTransparency = 1
+
+		local label = Instance.new("TextLabel", holder)
+		label.Size = UDim2.new(1, 0, 0, 20)
+		label.Text = name
+		label.TextColor3 = Color3.new(1, 1, 1)
+		label.BackgroundTransparency = 1
+		label.Font = Enum.Font.SourceSans
+		label.TextSize = 18
+
+		local bar = Instance.new("Frame", holder)
+		bar.Size = UDim2.new(1, 0, 0, 10)
+		bar.Position = UDim2.new(0, 0, 0, 30)
+		bar.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+
+		local knob = Instance.new("Frame", bar)
+		knob.Size = UDim2.new(0, 10, 1.5, 0)
+		knob.Position = UDim2.new(0, 0, -0.25, 0)
+		knob.BackgroundColor3 = Color3.new(1, 1, 1)
+
+		local dragging = false
+
+		knob.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				dragging = true
+			end
+		end)
+
+		UIS.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				dragging = false
+			end
+		end)
+
+		RS.RenderStepped:Connect(function()
+			if dragging then
+				local mouse = UIS:GetMouseLocation().X
+				local pos = bar.AbsolutePosition.X
+				local size = bar.AbsoluteSize.X
+				local pct = math.clamp((mouse - pos) / size, 0, 1)
+				knob.Position = UDim2.new(pct, -5, -0.25, 0)
+				local val = math.floor(min + (max - min) * pct)
+				f(val)
+			end
+		end)
+
+		tab[5][#tab[5]+1] = holder
+	end
+
+	function tab.addDropdown(name, opts, f)
+		local dd = Instance.new("TextButton", content)
+		dd.Size = UDim2.new(1, -10, 0, 30)
+		dd.Text = name .. ": " .. opts[1]
+		dd.BackgroundColor3 = Color3.new(0.25, 0.25, 0.25)
+		dd.TextColor3 = Color3.new(1, 1, 1)
+		dd.Font = Enum.Font.SourceSans
+		dd.TextSize = 20
+
+		local current = opts[1]
+		local index = 1
+
+		dd.MouseButton1Click:Connect(function()
+			index = index % #opts + 1
+			current = opts[index]
+			dd.Text = name .. ": " .. current
+			f(current)
+		end)
+
+		tab[6][#tab[6]+1] = dd
+	end
+
+	tabs[#tabs+1] = tab
+	return tab
 end
 
-return library
+function G.notify(text, t)
+	local n = Instance.new("TextLabel", notifHolder)
+	n.Size = UDim2.new(1, 0, 0, 30)
+	n.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+	n.TextColor3 = Color3.new(1, 1, 1)
+	n.Font = Enum.Font.SourceSans
+	n.TextSize = 18
+	n.Text = text
+	n.TextWrapped = true
+
+	task.delay(t or 3, function()
+		n:Destroy()
+	end)
+end
+
+function G.onPlayerJoin(f)
+	P.PlayerAdded:Connect(f)
+	for i = 1, #P:GetPlayers() do
+		if P:GetPlayers()[i] ~= LP then
+			f(P:GetPlayers()[i])
+		end
+	end
+end
+
+function G.onPlayerLeave(f)
+	P.PlayerRemoving:Connect(f)
+end
+
+UIS.InputBegan:Connect(function(i)
+	if i.KeyCode == Enum.KeyCode.Delete then
+		open = not open
+		ScreenGui.Enabled = open
+	end
+end)
+
+return G
