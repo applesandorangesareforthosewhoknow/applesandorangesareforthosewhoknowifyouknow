@@ -35,42 +35,23 @@ function G.newWindow(title)
 	H.Size = UDim2.new(1, 0, 0, 30)
 	H.Font = Enum.Font.SourceSans
 	H.TextSize = 24
-	H.Active = true
 
-	local dragging = false
-	local dragInput
-	local dragStart
-	local startPos
-
+	local dragging, offset
 	H.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			dragging = true
-			dragStart = input.Position
-			startPos = W.Position
-
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
-				end
-			end)
+			offset = Vector2.new(input.Position.X - W.Position.X.Offset, input.Position.Y - W.Position.Y.Offset)
 		end
 	end)
-
-	H.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement then
-			dragInput = input
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
 		end
 	end)
-
-	UIS.InputChanged:Connect(function(input)
-		if input == dragInput and dragging then
-			local delta = input.Position - dragStart
-			W.Position = UDim2.new(
-				startPos.X.Scale,
-				startPos.X.Offset + delta.X,
-				startPos.Y.Scale,
-				startPos.Y.Offset + delta.Y
-			)
+	RS.RenderStepped:Connect(function()
+		if dragging then
+			local mouse = UIS:GetMouseLocation()
+			W.Position = UDim2.new(0, mouse.X - offset.X, 0, mouse.Y - offset.Y)
 		end
 	end)
 
@@ -197,4 +178,63 @@ function G.newWindow(title)
 
 	function tab.addDropdown(name, opts, f)
 		local dd = Instance.new("TextButton", content)
-		dd.Size = UDim
+		dd.Size = UDim2.new(1, -10, 0, 30)
+		dd.Text = name .. ": " .. opts[1]
+		dd.BackgroundColor3 = Color3.new(0.25, 0.25, 0.25)
+		dd.TextColor3 = Color3.new(1, 1, 1)
+		dd.Font = Enum.Font.SourceSans
+		dd.TextSize = 20
+
+		local current = opts[1]
+		local index = 1
+
+		dd.MouseButton1Click:Connect(function()
+			index = index % #opts + 1
+			current = opts[index]
+			dd.Text = name .. ": " .. current
+			f(current)
+		end)
+
+		tab[6][#tab[6]+1] = dd
+	end
+
+	tabs[#tabs+1] = tab
+	return tab
+end
+
+function G.notify(text, t)
+	local n = Instance.new("TextLabel", notifHolder)
+	n.Size = UDim2.new(1, 0, 0, 30)
+	n.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+	n.TextColor3 = Color3.new(1, 1, 1)
+	n.Font = Enum.Font.SourceSans
+	n.TextSize = 18
+	n.Text = text
+	n.TextWrapped = true
+
+	task.delay(t or 3, function()
+		n:Destroy()
+	end)
+end
+
+function G.onPlayerJoin(f)
+	P.PlayerAdded:Connect(f)
+	for i = 1, #P:GetPlayers() do
+		if P:GetPlayers()[i] ~= LP then
+			f(P:GetPlayers()[i])
+		end
+	end
+end
+
+function G.onPlayerLeave(f)
+	P.PlayerRemoving:Connect(f)
+end
+
+UIS.InputBegan:Connect(function(i)
+	if i.KeyCode == Enum.KeyCode.Delete then
+		open = not open
+		ScreenGui.Enabled = open
+	end
+end)
+
+return G
