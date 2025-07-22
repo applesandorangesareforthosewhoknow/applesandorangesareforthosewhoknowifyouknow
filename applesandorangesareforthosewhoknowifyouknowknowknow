@@ -27,7 +27,7 @@ function G.newWindow(title)
 	W.Position = UDim2.new(0.5, -250, 0.5, -200)
 	W.AnchorPoint = Vector2.new(0.5, 0.5)
 	W.Active = true
-	W.Draggable = true
+	W.Draggable = false
 
 	local H = Instance.new("TextLabel", W)
 	H.Text = title
@@ -36,6 +36,43 @@ function G.newWindow(title)
 	H.Size = UDim2.new(1, 0, 0, 30)
 	H.Font = Enum.Font.SourceSans
 	H.TextSize = 24
+
+	local dragging = false
+	local dragInput
+	local dragStart
+	local startPos
+
+	H.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = W.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	H.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement then
+			dragInput = input
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			local delta = input.Position - dragStart
+			W.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
+		end
+	end)
 
 	local tabHolder = Instance.new("Frame", W)
 	tabHolder.Position = UDim2.new(0, 0, 0, 30)
