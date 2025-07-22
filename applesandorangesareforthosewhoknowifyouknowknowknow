@@ -1,3 +1,4 @@
+-- at top, already exists
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
 local P = game:GetService("Players")
@@ -27,7 +28,6 @@ function G.newWindow(title)
 	W.Position = UDim2.new(0.5, -250, 0.5, -200)
 	W.AnchorPoint = Vector2.new(0.5, 0.5)
 	W.Active = true
-	W.Draggable = false
 
 	local H = Instance.new("TextLabel", W)
 	H.Text = title
@@ -37,7 +37,28 @@ function G.newWindow(title)
 	H.Font = Enum.Font.SourceSans
 	H.TextSize = 24
 	H.Active = true
-	H.Draggable = true
+
+	local dragging, offset
+
+	H.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			offset = Vector2.new(input.Position.X, input.Position.Y) - Vector2.new(W.AbsolutePosition.X, W.AbsolutePosition.Y)
+		end
+	end)
+
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+
+	RS.RenderStepped:Connect(function()
+		if dragging then
+			local pos = UIS:GetMouseLocation()
+			W.Position = UDim2.new(0, pos.X - offset.X, 0, pos.Y - offset.Y)
+		end
+	end)
 
 	local tabHolder = Instance.new("Frame", W)
 	tabHolder.Position = UDim2.new(0, 0, 0, 30)
