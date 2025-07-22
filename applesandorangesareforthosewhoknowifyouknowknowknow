@@ -1,224 +1,248 @@
-local g = game:GetService("CoreGui")
-local u = {}
-local tabs = {}
-local currentTab
+-- Full optimized UI library using only arrays and numeric loops
 
--- UI Base Setup
-local s = Instance.new("ScreenGui", g)
-s.IgnoreGuiInset = true
-s.Name = "UI"
-local top = Instance.new("Frame", s)
-top.Size = UDim2.new(0, 500, 0, 30)
-top.Position = UDim2.new(0.5, -250, 0, 50)
-top.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-local body = Instance.new("Frame", s)
-body.Size = UDim2.new(0, 500, 0, 300)
-body.Position = UDim2.new(0.5, -250, 0, 80)
-body.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-local tabBtns = Instance.new("Frame", body)
-tabBtns.Size = UDim2.new(0, 100, 1, 0)
-tabBtns.Position = UDim2.new(0, 0, 0, 0)
-tabBtns.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-local tabCont = Instance.new("Frame", body)
-tabCont.Size = UDim2.new(1, -100, 1, 0)
-tabCont.Position = UDim2.new(0, 100, 0, 0)
-tabCont.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+local CoreGui       = game:GetService("CoreGui")
+local UserInput     = game:GetService("UserInputService")
+local Players       = game:GetService("Players")
 
--- Toggle Visibility with Delete
-local open = true
-game:GetService("UserInputService").InputBegan:Connect(function(i)
-	if i.KeyCode == Enum.KeyCode.Delete then
-		open = not open
-		s.Enabled = open
-	end
+local u             = {}        -- library
+local tabs          = {}        -- array of tabs
+local currentTab    -- holds active tab (array)
+
+-- Player event listeners
+local joinListeners  = {}
+local leaveListeners = {}
+
+-- Helpers
+local function T(t, v) t[#t+1] = v end
+local function new(cls, parent)
+    local inst = Instance.new(cls)
+    inst.Parent = parent
+    return inst
+end
+
+-- Select tab by numeric index
+local function selectTab(i)
+    if currentTab then
+        currentTab[1].BackgroundColor3 = Color3.fromRGB(20,20,20)
+        currentTab[2].Visible            = false
+    end
+    currentTab = tabs[i]
+    currentTab[1].BackgroundColor3 = Color3.fromRGB(60,60,60)
+    currentTab[2].Visible            = true
+end
+
+-- Base UI
+local screen = new("ScreenGui", CoreGui)
+screen.IgnoreGuiInset = true
+screen.Name           = "UI"
+screen.Enabled        = true
+
+-- Toggle with Delete
+UserInput.InputBegan:Connect(function(input, gp)
+    if not gp and input.KeyCode == Enum.KeyCode.Delete then
+        screen.Enabled = not screen.Enabled
+    end
 end)
 
--- Helper Functions
-local function T(t, v) t[#t+1] = v end
-local function new(class, parent)
-	local i = Instance.new(class)
-	i.Parent = parent
-	return i
-end
-local function selectTab(i)
-	if currentTab then currentTab.cont.Visible = false end
-	currentTab = tabs[i]
-	currentTab.cont.Visible = true
-end
+-- Main container
+local body   = new("Frame", screen)
+body.Size    = UDim2.new(0,500,0,350)
+body.Position= UDim2.new(0.5,-250,0.5,-175)
+body.BackgroundColor3 = Color3.fromRGB(30,30,30)
 
--- Window Constructor
+-- Tab buttons pane
+local tabBtns = new("Frame", body)
+tabBtns.Size  = UDim2.new(0,100,1,0)
+tabBtns.BackgroundColor3 = Color3.fromRGB(25,25,25)
+
+-- Tab content pane
+local tabCont = new("Frame", body)
+tabCont.Size     = UDim2.new(1,-100,1,0)
+tabCont.Position = UDim2.new(0,100,0,0)
+tabCont.BackgroundColor3 = Color3.fromRGB(40,40,40)
+
+-- Public API: newWindow
 function u.newWindow(name)
-	local tbtn = new("TextButton", tabBtns)
-	tbtn.Size = UDim2.new(1, 0, 0, 30)
-	tbtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	tbtn.Text = name
-	tbtn.TextColor3 = Color3.new(1, 1, 1)
-	tbtn.AutoButtonColor = false
+    -- Tab button
+    local btn = new("TextButton", tabBtns)
+    btn.Size           = UDim2.new(1,0,0,30)
+    btn.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    btn.TextColor3     = Color3.new(1,1,1)
+    btn.Text           = name
+    btn.AutoButtonColor= false
 
-	local tcont = new("ScrollingFrame", tabCont)
-	tcont.Size = UDim2.new(1, 0, 1, 0)
-	tcont.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	tcont.Visible = false
-	tcont.CanvasSize = UDim2.new(0, 0, 1, 0)
-	tcont.ScrollBarThickness = 6
-	tcont.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    -- Tab content
+    local cont = new("ScrollingFrame", tabCont)
+    cont.Size               = UDim2.new(1,0,1,0)
+    cont.BackgroundColor3   = Color3.fromRGB(40,40,40)
+    cont.Visible            = false
+    cont.AutomaticCanvasSize= Enum.AutomaticSize.Y
+    cont.ScrollBarThickness = 6
 
-	local layout = Instance.new("UIListLayout", tcont)
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Padding = UDim.new(0, 4)
+    local layout = Instance.new("UIListLayout", cont)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding   = UDim.new(0,4)
 
-	local tab = {
-		btn = tbtn,
-		cont = tcont,
-		buttons = {},
-		toggles = {},
-		sliders = {},
-		dropdowns = {}
-	}
-	T(tabs, tab)
-	tbtn.MouseButton1Click:Connect(function() selectTab(#tabs) end)
-	if #tabs == 1 then selectTab(1) end
+    -- tab array: [1]=btn, [2]=cont, [3]=buttons, [4]=toggles, [5]=sliders, [6]=dropdowns
+    local tab = { btn, cont, {}, {}, {}, {} }
+    T(tabs, tab)
 
-	-- Add Element Methods
-	function tab.addButton(text, cb) u.addButton(tab, text, cb) end
-	function tab.addToggle(text, cb) u.addToggle(tab, text, cb) end
-	function tab.addSlider(text, min, max, cb) u.addSlider(tab, text, min, max, cb) end
-	function tab.addDropdown(text, list, cb) u.addDropdown(tab, text, list, cb) end
+    btn.MouseButton1Click:Connect(function() selectTab(#tabs) end)
+    if #tabs == 1 then
+        selectTab(1)
+    end
 
-	return tab
+    -- Inject methods
+    function tab.addButton(text, cb)    u.addButton(tab, text, cb)    end
+    function tab.addToggle(text, cb)    u.addToggle(tab, text, cb)    end
+    function tab.addSlider(text,m,M,cb) u.addSlider(tab, text, m, M, cb) end
+    function tab.addDropdown(text,ls,cb)u.addDropdown(tab, text, ls, cb) end
+
+    return tab
 end
 
--- Elements
+-- Button
 function u.addButton(tab, text, cb)
-	local b = new("TextButton", tab.cont)
-	b.Size = UDim2.new(1, -10, 0, 30)
-	b.Position = UDim2.new(0, 5, 0, 0)
-	b.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	b.TextColor3 = Color3.new(1, 1, 1)
-	b.Text = text
-	b.AutoButtonColor = true
-	b.MouseButton1Click:Connect(cb)
-	T(tab.buttons, b)
+    local b = new("TextButton", tab[2])
+    b.Size           = UDim2.new(1,-10,0,30)
+    b.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    b.TextColor3     = Color3.new(1,1,1)
+    b.Text           = text
+    b.AutoButtonColor= true
+    T(tab[3], b)
+    b.MouseButton1Click:Connect(cb)
 end
 
+-- Toggle
 function u.addToggle(tab, text, cb)
-	local b = new("TextButton", tab.cont)
-	b.Size = UDim2.new(1, -10, 0, 30)
-	b.Position = UDim2.new(0, 5, 0, 0)
-	b.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	b.TextColor3 = Color3.new(1, 1, 1)
-	b.Text = text .. ": OFF"
-	b.AutoButtonColor = true
-	local state = false
-	b.MouseButton1Click:Connect(function()
-		state = not state
-		b.Text = text .. ": " .. (state and "ON" or "OFF")
-		cb(state)
-	end)
-	T(tab.toggles, b)
+    local b = new("TextButton", tab[2])
+    b.Size           = UDim2.new(1,-10,0,30)
+    b.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    b.TextColor3     = Color3.new(1,1,1)
+    b.Text           = text .. ": OFF"
+    b.AutoButtonColor= true
+    local st = false
+    b.MouseButton1Click:Connect(function()
+        st = not st
+        b.Text = text .. ": " .. (st and "ON" or "OFF")
+        cb(st)
+    end)
+    T(tab[4], b)
 end
 
+-- Slider
 function u.addSlider(tab, text, min, max, cb)
-	local frame = new("Frame", tab.cont)
-	frame.Size = UDim2.new(1, -10, 0, 30)
-	frame.Position = UDim2.new(0, 5, 0, 0)
-	frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    local fr = new("Frame", tab[2])
+    fr.Size           = UDim2.new(1,-10,0,30)
+    fr.BackgroundColor3 = Color3.fromRGB(30,30,30)
 
-	local label = new("TextLabel", frame)
-	label.Size = UDim2.new(1, 0, 1, 0)
-	label.BackgroundTransparency = 1
-	label.Text = text .. ": " .. min
-	label.TextColor3 = Color3.new(1, 1, 1)
+    local lbl = new("TextLabel", fr)
+    lbl.Size            = UDim2.new(1,0,1,0)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3      = Color3.new(1,1,1)
+    lbl.Text            = text .. ": " .. min
 
-	local slider = new("TextButton", frame)
-	slider.Size = UDim2.new(0, 0, 1, 0)
-	slider.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-	slider.Position = UDim2.new(0, 0, 0, 0)
-	slider.Text = ""
-	slider.AutoButtonColor = false
+    local sl = new("TextButton", fr)
+    sl.Size            = UDim2.new(0,0,1,0)
+    sl.BackgroundColor3 = Color3.fromRGB(70,70,70)
+    sl.Text            = ""
+    sl.AutoButtonColor = false
 
-	slider.InputBegan:Connect(function(i)
-		if i.UserInputType == Enum.UserInputType.MouseButton1 then
-			local moveConn
-			moveConn = game:GetService("UserInputService").InputChanged:Connect(function(m)
-				if m.UserInputType == Enum.UserInputType.MouseMovement then
-					local x = math.clamp((m.Position.X - frame.AbsolutePosition.X) / frame.AbsoluteSize.X, 0, 1)
-					slider.Size = UDim2.new(x, 0, 1, 0)
-					local val = math.floor(min + (max - min) * x)
-					label.Text = text .. ": " .. val
-					cb(val)
-				end
-			end)
-			local endConn
-			endConn = game:GetService("UserInputService").InputEnded:Connect(function(i2)
-				if i2.UserInputType == Enum.UserInputType.MouseButton1 then
-					moveConn:Disconnect()
-					endConn:Disconnect()
-				end
-			end)
-		end
-	end)
-	T(tab.sliders, frame)
+    sl.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            local mv, up
+            mv = UserInput.InputChanged:Connect(function(m)
+                if m.UserInputType==Enum.UserInputType.MouseMovement then
+                    local x = math.clamp((m.Position.X-fr.AbsolutePosition.X)/fr.AbsoluteSize.X,0,1)
+                    sl.Size = UDim2.new(x,0,1,0)
+                    local v = math.floor(min + (max-min)*x)
+                    lbl.Text = text .. ": " .. v
+                    cb(v)
+                end
+            end)
+            up = UserInput.InputEnded:Connect(function(m2)
+                if m2.UserInputType==Enum.UserInputType.MouseButton1 then
+                    mv:Disconnect()
+                    up:Disconnect()
+                end
+            end)
+        end
+    end)
+
+    T(tab[5], fr)
 end
 
+-- Dropdown
 function u.addDropdown(tab, text, list, cb)
-	local drop = new("TextButton", tab.cont)
-	drop.Size = UDim2.new(1, -10, 0, 30)
-	drop.Position = UDim2.new(0, 5, 0, 0)
-	drop.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	drop.TextColor3 = Color3.new(1, 1, 1)
-	drop.Text = text
-	drop.AutoButtonColor = true
+    local drop = new("TextButton", tab[2])
+    drop.Size           = UDim2.new(1,-10,0,30)
+    drop.BackgroundColor3 = Color3.fromRGB(30,30,30)
+    drop.TextColor3     = Color3.new(1,1,1)
+    drop.Text           = text
+    drop.AutoButtonColor= true
 
-	local open = false
-	local opts = {}
+    local open = false
+    local opts = {}
 
-	drop.MouseButton1Click:Connect(function()
-		open = not open
-		for _, o in next, opts do
-			o.Visible = open
-		end
-	end)
+    drop.MouseButton1Click:Connect(function()
+        open = not open
+        for i=1,#opts do
+            opts[i].Visible = open
+        end
+    end)
 
-	for _, v in next, list do
-		local o = new("TextButton", tab.cont)
-		o.Size = UDim2.new(1, -10, 0, 30)
-		o.Position = UDim2.new(0, 5, 0, 0)
-		o.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-		o.TextColor3 = Color3.new(1, 1, 1)
-		o.Text = "  ↪ " .. v
-		o.Visible = false
-		o.AutoButtonColor = true
-		o.MouseButton1Click:Connect(function()
-			cb(v)
-			open = false
-			for _, x in next, opts do x.Visible = false end
-		end)
-		T(opts, o)
-	end
+    for i=1,#list do
+        local v = list[i]
+        local o = new("TextButton", tab[2])
+        o.Size           = UDim2.new(1,-20,0,30)
+        o.BackgroundColor3 = Color3.fromRGB(20,20,20)
+        o.TextColor3     = Color3.new(1,1,1)
+        o.Text           = "  ↪ " .. v
+        o.Visible        = false
+        o.AutoButtonColor= true
+        o.MouseButton1Click:Connect(function()
+            cb(v)
+            open = false
+            for j=1,#opts do
+                opts[j].Visible = false
+            end
+        end)
+        T(opts, o)
+    end
 
-	T(tab.dropdowns, drop)
+    T(tab[6], drop)
 end
 
--- Notification
+-- Notifications
 function u.notify(text, dur)
-	local n = new("TextLabel", s)
-	n.Size = UDim2.new(0, 300, 0, 30)
-	n.Position = UDim2.new(0.5, -150, 0, 400)
-	n.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-	n.TextColor3 = Color3.new(1, 1, 1)
-	n.Text = text
-	n.TextScaled = true
-	task.delay(dur or 3, function() n:Destroy() end)
+    local n = new("TextLabel", screen)
+    n.Size           = UDim2.new(0,300,0,30)
+    n.Position       = UDim2.new(0.5,-150,0.8,0)
+    n.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    n.TextColor3     = Color3.new(1,1,1)
+    n.Text           = text
+    n.TextScaled     = true
+    task.delay(dur or 3, function() n:Destroy() end)
 end
 
--- Player Events
+-- Player events
+Players.PlayerAdded:Connect(function(p)
+    for i=1,#joinListeners do
+        joinListeners[i](p)
+    end
+end)
+Players.PlayerRemoving:Connect(function(p)
+    for i=1,#leaveListeners do
+        leaveListeners[i](p)
+    end
+end)
+
 function u.onPlayerJoin(cb)
-	game.Players.PlayerAdded:Connect(cb)
+    T(joinListeners, cb)
 end
 
 function u.onPlayerLeave(cb)
-	game.Players.PlayerRemoving:Connect(cb)
+    T(leaveListeners, cb)
 end
 
 return u
