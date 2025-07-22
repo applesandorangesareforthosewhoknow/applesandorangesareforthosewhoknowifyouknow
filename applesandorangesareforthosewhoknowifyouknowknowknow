@@ -1,112 +1,102 @@
--- UI Library with dragging only on sidebar
+local UIS = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+
 local library = {}
 
 function library:CreateWindow(name)
-	local CoreGui = game:GetService("CoreGui")
-	local UIS = game:GetService("UserInputService")
-	local TweenService = game:GetService("TweenService")
+    local screen = Instance.new("ScreenGui", CoreGui)
+    screen.IgnoreGuiInset = true
+    screen.Name = name
+    screen.ResetOnSpawn = false
 
-	local main = Instance.new("ScreenGui")
-	main.Name = name
-	main.ResetOnSpawn = false
-	main.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	main.Parent = CoreGui
+    local window = Instance.new("Frame", screen)
+    window.Size = UDim2.new(0, 600, 0, 400)
+    window.Position = UDim2.new(0.75, -300, 0.5, -200)
+    window.AnchorPoint = Vector2.new(0.5, 0.5)
+    window.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    window.BorderSizePixel = 0
 
-	local window = Instance.new("Frame")
-	window.Size = UDim2.new(0, 600, 0, 400)
-	window.Position = UDim2.new(0.5, -300, 0.5, -200)
-	window.AnchorPoint = Vector2.new(0.5, 0.5)
-	window.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	window.BorderSizePixel = 0
-	window.Parent = main
+    local sidebar = Instance.new("Frame", window)
+    sidebar.Size = UDim2.new(0, 150, 1, 0)
+    sidebar.Position = UDim2.new(0, 0, 0, 0)
+    sidebar.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    sidebar.BorderSizePixel = 0
 
-	local sidebar = Instance.new("Frame")
-	sidebar.Size = UDim2.new(0, 150, 1, 0)
-	sidebar.Position = UDim2.new(0, 0, 0, 0)
-	sidebar.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-	sidebar.BorderSizePixel = 0
-	sidebar.Parent = window
+    local content = Instance.new("Frame", window)
+    content.Size = UDim2.new(1, -150, 1, 0)
+    content.Position = UDim2.new(0, 150, 0, 0)
+    content.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    content.BorderSizePixel = 0
 
-	local content = Instance.new("Frame")
-	content.Size = UDim2.new(1, -150, 1, 0)
-	content.Position = UDim2.new(0, 150, 0, 0)
-	content.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-	content.BorderSizePixel = 0
-	content.Parent = window
+    local sidebarLayout = Instance.new("UIListLayout", sidebar)
+    sidebarLayout.FillDirection = Enum.FillDirection.Vertical
+    sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    sidebarLayout.Padding = UDim.new(0, 4)
 
-	local sidebarLayout = Instance.new("UIListLayout")
-	sidebarLayout.FillDirection = Enum.FillDirection.Vertical
-	sidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	sidebarLayout.Padding = UDim.new(0, 4)
-	sidebarLayout.Parent = sidebar
+    local currentTab
 
-	local currentTab = nil
+    local function createTab(name)
+        local btn = Instance.new("TextButton", sidebar)
+        btn.Size = UDim2.new(1, 0, 0, 30)
+        btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        btn.TextColor3 = Color3.new(1, 1, 1)
+        btn.Font = Enum.Font.SourceSansBold
+        btn.TextSize = 20
+        btn.Text = name
 
-	local function createTab(name)
-		local button = Instance.new("TextButton")
-		button.Size = UDim2.new(1, 0, 0, 30)
-		button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-		button.TextColor3 = Color3.new(1, 1, 1)
-		button.Font = Enum.Font.SourceSansBold
-		button.TextSize = 20
-		button.Text = name
-		button.Parent = sidebar
+        local tabFrame = Instance.new("Frame", content)
+        tabFrame.Size = UDim2.new(1, 0, 1, 0)
+        tabFrame.BackgroundTransparency = 1
+        tabFrame.Visible = false
 
-		local tabFrame = Instance.new("Frame")
-		tabFrame.Size = UDim2.new(1, 0, 1, 0)
-		tabFrame.BackgroundTransparency = 1
-		tabFrame.Visible = false
-		tabFrame.Parent = content
+        local layout = Instance.new("UIListLayout", tabFrame)
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout.Padding = UDim.new(0, 8)
 
-		local layout = Instance.new("UIListLayout")
-		layout.SortOrder = Enum.SortOrder.LayoutOrder
-		layout.Padding = UDim.new(0, 8)
-		layout.Parent = tabFrame
+        btn.MouseButton1Click:Connect(function()
+            if currentTab then
+                currentTab.Visible = false
+            end
+            currentTab = tabFrame
+            currentTab.Visible = true
+        end)
 
-		button.MouseButton1Click:Connect(function()
-			if currentTab then
-				currentTab.Visible = false
-			end
-			currentTab = tabFrame
-			tabFrame.Visible = true
-		end)
+        if not currentTab then
+            currentTab = tabFrame
+            currentTab.Visible = true
+        end
 
-		if not currentTab then
-			currentTab = tabFrame
-			tabFrame.Visible = true
-		end
+        return tabFrame
+    end
 
-		return tabFrame
-	end
+    return {
+        CreateTab = createTab,
+        Notify = function(text, duration)
+            local holder = screen:FindFirstChild("NotifyHolder")
+            if not holder then
+                holder = Instance.new("Frame", screen)
+                holder.Name = "NotifyHolder"
+                holder.Size = UDim2.new(0, 300, 1, -20)
+                holder.Position = UDim2.new(1, -310, 0, 10)
+                holder.BackgroundTransparency = 1
+                local list = Instance.new("UIListLayout", holder)
+                list.SortOrder = Enum.SortOrder.LayoutOrder
+                list.Padding = UDim.new(0, 5)
+            end
 
-	local dragging = false
-	local dragInput, dragStart, startPos
+            local label = Instance.new("TextLabel", holder)
+            label.Size = UDim2.new(1, 0, 0, 30)
+            label.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            label.TextColor3 = Color3.new(1, 1, 1)
+            label.TextScaled = true
+            label.Text = text
 
-	sidebar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = true
-			dragStart = input.Position
-			startPos = window.Position
-		end
-	end)
-
-	sidebar.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = false
-		end
-	end)
-
-	UIS.InputChanged:Connect(function(input)
-		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-			local delta = input.Position - dragStart
-			window.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		end
-	end)
-
-	return {
-		CreateTab = createTab,
-		Content = content
-	}
+            delay(duration or 3, function()
+                label:Destroy()
+            end)
+        end
+    }
 end
 
 return library
