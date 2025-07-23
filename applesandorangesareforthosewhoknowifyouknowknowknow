@@ -48,11 +48,10 @@ function G.newWindow(title)
 	H.Selectable = true
 	H.AutoButtonColor = false
 
-
 	H.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			local mouse = UIS:GetMouseLocation()
-			offset = mouse - W.AbsolutePosition
+			offset = Vector2.new(mouse.X - W.AbsolutePosition.X, mouse.Y - W.AbsolutePosition.Y)
 			dragging = true
 		end
 	end)
@@ -63,10 +62,10 @@ function G.newWindow(title)
 		end
 	end)
 
-	RS.RenderStepped:Connect(function()
+	RS:BindToRenderStep("DragWindow", Enum.RenderPriority.Input.Value, function()
 		if dragging then
 			local mouse = UIS:GetMouseLocation()
-			local newPos = mouse - offset
+			local newPos = Vector2.new(mouse.X - offset.X, mouse.Y - offset.Y)
 			W.Position = UDim2.new(0, newPos.X, 0, newPos.Y)
 		end
 	end)
