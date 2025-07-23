@@ -10,8 +10,14 @@ local tabs = {}
 local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-local notifHolder = Instance.new("Frame", game:GetService("CoreGui"))
+local notifGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+notifGui.Name = "NotifGui"
+notifGui.IgnoreGuiInset = true
+notifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local notifHolder = Instance.new("Frame", notifGui)
 notifHolder.Position = UDim2.new(1, -220, 0, 20)
 notifHolder.Size = UDim2.new(0, 200, 1, -40)
 notifHolder.BackgroundTransparency = 1
@@ -37,30 +43,28 @@ function G.newWindow(title)
 	H.TextSize = 24
 	H.Active = true
 
-	local dragging, start
+	local dragging = false
+	local offset
 
 	H.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = true
 			local mouse = UIS:GetMouseLocation()
-			start = Vector2.new(mouse.X, mouse.Y)
+			local guiPos = W.AbsolutePosition
+			offset = Vector2.new(mouse.X - guiPos.X, mouse.Y - guiPos.Y)
+			dragging = true
 		end
 	end)
 
 	UIS.InputEnded:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			dragging = false
-			start = nil
 		end
 	end)
 
 	RS.RenderStepped:Connect(function()
-		if dragging and start then
-			local pos = UIS:GetMouseLocation()
-			pos = Vector2.new(pos.X, pos.Y)
-			local delta = pos - start
-			W.Position = UDim2.new(0, W.Position.X.Offset + delta.X, 0, W.Position.Y.Offset + delta.Y)
-			start = pos
+		if dragging and offset then
+			local mouse = UIS:GetMouseLocation()
+			W.Position = UDim2.new(0, mouse.X - offset.X, 0, mouse.Y - offset.Y)
 		end
 	end)
 
