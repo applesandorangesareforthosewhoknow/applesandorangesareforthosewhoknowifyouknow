@@ -13,10 +13,9 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local notifGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
-notifGui.Name = "NotifGui"
 notifGui.IgnoreGuiInset = true
-notifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 notifGui.ResetOnSpawn = false
+notifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local notifHolder = Instance.new("Frame", notifGui)
 notifHolder.AnchorPoint = Vector2.new(1, 0)
@@ -47,13 +46,13 @@ function G.newWindow(title)
 	H.Active = true
 
 	local dragging = false
-	local offset
+	local offset = Vector2.new()
 
 	H.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			local mouse = UIS:GetMouseLocation()
-			local guiPos = W.AbsolutePosition
-			offset = Vector2.new(mouse.X - guiPos.X, mouse.Y - guiPos.Y)
+			local guiPos = W.Parent:ScreenToGuiPosition(mouse)
+			offset = guiPos - W.AbsolutePosition
 			dragging = true
 		end
 	end)
@@ -65,9 +64,10 @@ function G.newWindow(title)
 	end)
 
 	RS.RenderStepped:Connect(function()
-		if dragging and offset then
+		if dragging then
 			local mouse = UIS:GetMouseLocation()
-			W.Position = UDim2.new(0, mouse.X - offset.X, 0, mouse.Y - offset.Y)
+			local guiPos = W.Parent:ScreenToGuiPosition(mouse)
+			W.Position = UDim2.new(0, guiPos.X - offset.X, 0, guiPos.Y - offset.Y)
 		end
 	end)
 
@@ -228,6 +228,7 @@ function G.notify(text, t)
 	n.TextSize = 18
 	n.Text = text
 	n.TextWrapped = true
+	n.ZIndex = 10
 
 	task.delay(t or 3, function()
 		n:Destroy()
@@ -236,9 +237,9 @@ end
 
 function G.onPlayerJoin(f)
 	P.PlayerAdded:Connect(f)
-	for i = 1, #P:GetPlayers() do
-		if P:GetPlayers()[i] ~= LP then
-			f(P:GetPlayers()[i])
+	for _, plr in ipairs(P:GetPlayers()) do
+		if plr ~= LP then
+			f(plr)
 		end
 	end
 end
