@@ -1,4 +1,3 @@
--- at top, already exists
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
 local P = game:GetService("Players")
@@ -38,25 +37,28 @@ function G.newWindow(title)
 	H.TextSize = 24
 	H.Active = true
 
-	local dragging, offset
+	local dragging, start
 
 	H.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			dragging = true
-			offset = Vector2.new(input.Position.X, input.Position.Y) - Vector2.new(W.AbsolutePosition.X, W.AbsolutePosition.Y)
+			start = UIS:GetMouseLocation()
 		end
 	end)
 
 	UIS.InputEnded:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			dragging = false
+			start = nil
 		end
 	end)
 
 	RS.RenderStepped:Connect(function()
-		if dragging then
+		if dragging and start then
 			local pos = UIS:GetMouseLocation()
-			W.Position = UDim2.new(0, pos.X - offset.X, 0, pos.Y - offset.Y)
+			local delta = pos - start
+			W.Position = UDim2.new(0, W.Position.X.Offset + delta.X, 0, W.Position.Y.Offset + delta.Y)
+			start = pos
 		end
 	end)
 
