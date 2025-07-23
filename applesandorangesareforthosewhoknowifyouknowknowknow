@@ -16,11 +16,14 @@ local notifGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 notifGui.Name = "NotifGui"
 notifGui.IgnoreGuiInset = true
 notifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+notifGui.ResetOnSpawn = false
 
 local notifHolder = Instance.new("Frame", notifGui)
-notifHolder.Position = UDim2.new(1, -220, 0, 20)
+notifHolder.AnchorPoint = Vector2.new(1, 0)
+notifHolder.Position = UDim2.new(1, -20, 0, 20)
 notifHolder.Size = UDim2.new(0, 200, 1, -40)
 notifHolder.BackgroundTransparency = 1
+notifHolder.ZIndex = 10
 
 local notifList = Instance.new("UIListLayout", notifHolder)
 notifList.SortOrder = Enum.SortOrder.LayoutOrder
