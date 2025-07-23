@@ -45,6 +45,9 @@ function G.newWindow(title)
 	H.Font = Enum.Font.SourceSans
 	H.TextSize = 24
 	H.Active = true
+	H.Selectable = true
+	H.AutoButtonColor = false
+
 
 	H.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
