@@ -6,23 +6,24 @@ local LP = P.LocalPlayer
 local G = {}
 local open = true
 local tabs = {}
+local dragging, offset
 
-local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Name = "MainUI"
+ScreenGui.Parent = game:GetService("CoreGui")
 
-local notifGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+local notifGui = Instance.new("ScreenGui")
 notifGui.IgnoreGuiInset = true
 notifGui.ResetOnSpawn = false
-notifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+notifGui.Name = "NotifUI"
+notifGui.Parent = game:GetService("CoreGui")
 
 local notifHolder = Instance.new("Frame", notifGui)
-notifHolder.AnchorPoint = Vector2.new(1, 0)
-notifHolder.Position = UDim2.new(1, -20, 0, 20)
+notifHolder.Position = UDim2.new(1, -220, 0, 20)
 notifHolder.Size = UDim2.new(0, 200, 1, -40)
 notifHolder.BackgroundTransparency = 1
-notifHolder.ZIndex = 10
 
 local notifList = Instance.new("UIListLayout", notifHolder)
 notifList.SortOrder = Enum.SortOrder.LayoutOrder
@@ -45,14 +46,10 @@ function G.newWindow(title)
 	H.TextSize = 24
 	H.Active = true
 
-	local dragging = false
-	local offset = Vector2.new()
-
 	H.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			local mouse = UIS:GetMouseLocation()
-			local guiPos = W.Parent:ScreenToGuiPosition(mouse)
-			offset = guiPos - W.AbsolutePosition
+			offset = mouse - W.AbsolutePosition
 			dragging = true
 		end
 	end)
@@ -66,8 +63,8 @@ function G.newWindow(title)
 	RS.RenderStepped:Connect(function()
 		if dragging then
 			local mouse = UIS:GetMouseLocation()
-			local guiPos = W.Parent:ScreenToGuiPosition(mouse)
-			W.Position = UDim2.new(0, guiPos.X - offset.X, 0, guiPos.Y - offset.Y)
+			local newPos = mouse - offset
+			W.Position = UDim2.new(0, newPos.X, 0, newPos.Y)
 		end
 	end)
 
@@ -164,22 +161,22 @@ function G.newWindow(title)
 		knob.Position = UDim2.new(0, 0, -0.25, 0)
 		knob.BackgroundColor3 = Color3.new(1, 1, 1)
 
-		local dragging = false
+		local draggingSlider = false
 
 		knob.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
-				dragging = true
+				draggingSlider = true
 			end
 		end)
 
 		UIS.InputEnded:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
-				dragging = false
+				draggingSlider = false
 			end
 		end)
 
 		RS.RenderStepped:Connect(function()
-			if dragging then
+			if draggingSlider then
 				local mouse = UIS:GetMouseLocation().X
 				local pos = bar.AbsolutePosition.X
 				local size = bar.AbsoluteSize.X
@@ -228,8 +225,6 @@ function G.notify(text, t)
 	n.TextSize = 18
 	n.Text = text
 	n.TextWrapped = true
-	n.ZIndex = 10
-
 	task.delay(t or 3, function()
 		n:Destroy()
 	end)
