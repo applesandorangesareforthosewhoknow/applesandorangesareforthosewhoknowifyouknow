@@ -12,6 +12,7 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Name = "MainUI"
+ScreenGui.Enabled = open
 ScreenGui.Parent = game:GetService("CoreGui")
 
 local notifGui = Instance.new("ScreenGui")
@@ -50,9 +51,8 @@ function G.newWindow(title)
 
 	H.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			local mouse = UIS:GetMouseLocation()
-			offset = Vector2.new(mouse.X - W.AbsolutePosition.X, mouse.Y - W.AbsolutePosition.Y)
-			dragging = true
+			offset = Vector2.new(input.Position.X - W.AbsolutePosition.X, input.Position.Y - W.AbsolutePosition.Y)
+			dragging = W
 		end
 	end)
 
@@ -62,11 +62,10 @@ function G.newWindow(title)
 		end
 	end)
 
-	RS:BindToRenderStep("DragWindow", Enum.RenderPriority.Input.Value, function()
-		if dragging then
-			local mouse = UIS:GetMouseLocation()
-			local newPos = Vector2.new(mouse.X - offset.X, mouse.Y - offset.Y)
-			W.Position = UDim2.new(0, newPos.X, 0, newPos.Y)
+	RS:BindToRenderStep("DragWindow" .. tostring(W), Enum.RenderPriority.Input.Value, function()
+		if dragging == W then
+			local pos = UIS:GetMouseLocation()
+			W.Position = UDim2.new(0, pos.X - offset.X, 0, pos.Y - offset.Y)
 		end
 	end)
 
@@ -84,6 +83,7 @@ function G.newWindow(title)
 	content.Size = UDim2.new(1, -120, 1, -30)
 	content.BackgroundColor3 = Color3.new(0.18, 0.18, 0.18)
 	content.ClipsDescendants = true
+	content.Visible = false
 
 	local list = Instance.new("UIListLayout", content)
 	list.SortOrder = Enum.SortOrder.LayoutOrder
@@ -159,8 +159,8 @@ function G.newWindow(title)
 		bar.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
 
 		local knob = Instance.new("Frame", bar)
-		knob.Size = UDim2.new(0, 10, 1.5, 0)
-		knob.Position = UDim2.new(0, 0, -0.25, 0)
+		knob.Size = UDim2.new(0, 10, 1, 0)
+		knob.Position = UDim2.new(0, 0, 0, 0)
 		knob.BackgroundColor3 = Color3.new(1, 1, 1)
 
 		local draggingSlider = false
@@ -179,11 +179,11 @@ function G.newWindow(title)
 
 		RS.RenderStepped:Connect(function()
 			if draggingSlider then
-				local mouse = UIS:GetMouseLocation().X
+				local mouseX = UIS:GetMouseLocation().X
 				local pos = bar.AbsolutePosition.X
 				local size = bar.AbsoluteSize.X
-				local pct = math.clamp((mouse - pos) / size, 0, 1)
-				knob.Position = UDim2.new(pct, -5, -0.25, 0)
+				local pct = math.clamp((mouseX - pos) / size, 0, 1)
+				knob.Position = UDim2.new(pct, -5, 0, 0)
 				local val = math.floor(min + (max - min) * pct)
 				f(val)
 			end
@@ -201,14 +201,12 @@ function G.newWindow(title)
 		dd.Font = Enum.Font.SourceSans
 		dd.TextSize = 20
 
-		local current = opts[1]
 		local index = 1
 
 		dd.MouseButton1Click:Connect(function()
 			index = index % #opts + 1
-			current = opts[index]
-			dd.Text = name .. ": " .. current
-			f(current)
+			dd.Text = name .. ": " .. opts[index]
+			f(opts[index])
 		end)
 
 		tab[6][#tab[6]+1] = dd
