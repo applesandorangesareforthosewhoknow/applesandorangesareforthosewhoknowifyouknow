@@ -3,7 +3,10 @@ local lib = {}
 local g = {
     tab_color = Color3.fromRGB(45, 45, 45),
     btn_color = Color3.fromRGB(30, 30, 30),
-    text_color = Color3.fromRGB(255, 255, 255)
+    text_color = Color3.fromRGB(255, 255, 255),
+    tab_width = 200,
+    tab_height = 30,
+    gap = 10
 }
 
 local uis = game:GetService("UserInputService")
@@ -12,6 +15,8 @@ local coregui = game:GetService("CoreGui")
 local gui = Instance.new("ScreenGui", coregui)
 gui.Name = "CornageFloatingUI"
 gui.ResetOnSpawn = false
+
+local tab_count = 0
 
 local function make_draggable(f)
     local drag = false
@@ -35,9 +40,11 @@ local function make_draggable(f)
 end
 
 function lib:tab(name)
+    tab_count = tab_count + 1
+
     local tab = Instance.new("Frame", gui)
-    tab.Size = UDim2.new(0, 200, 0, 30)
-    tab.Position = UDim2.new(0, 100, 0, 100)
+    tab.Size = UDim2.new(0, g.tab_width, 0, g.tab_height)
+    tab.Position = UDim2.new(0, (g.tab_width + g.gap) * (tab_count - 1) + 10, 0, 100)
     tab.BackgroundColor3 = g.tab_color
     tab.BorderSizePixel = 0
     tab.Active = true
@@ -74,7 +81,7 @@ function lib:tab(name)
         open = not open
         content.Visible = open
         toggle.Text = open and "-" or "+"
-        tab.Size = UDim2.new(0, 200, 0, open and (#content:GetChildren() * 35 + 30) or 30)
+        tab.Size = UDim2.new(0, g.tab_width, 0, open and (#content:GetChildren() * 35 + g.tab_height) or g.tab_height)
     end)
 
     local t = {}
@@ -91,7 +98,7 @@ function lib:tab(name)
 
         content.Size = UDim2.new(1, 0, 0, #content:GetChildren() * 35)
         if open then
-            tab.Size = UDim2.new(0, 200, 0, #content:GetChildren() * 35 + 30)
+            tab.Size = UDim2.new(0, g.tab_width, 0, #content:GetChildren() * 35 + g.tab_height)
         end
     end
 
