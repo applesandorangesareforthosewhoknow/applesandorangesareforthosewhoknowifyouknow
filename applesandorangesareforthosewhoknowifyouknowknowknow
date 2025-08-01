@@ -1,173 +1,87 @@
-local u=game:GetService("UserInputService")
-local r=game:GetService("RunService")
-local sg=Instance.new("ScreenGui",game:GetService("CoreGui"))
-sg.IgnoreGuiInset=true
-sg.ResetOnSpawn=false
-sg.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+local lib = {}
 
-local g={}
-local windows = {}
+local uis = game:GetService("UserInputService")
+local plr = game.Players.LocalPlayer
 
-local spacing = 10
-local width = 300
-local yPos = 50
+local g = {
+    main_color = Color3.fromRGB(30, 30, 30),
+    accent_color = Color3.fromRGB(60, 60, 60),
+    text_color = Color3.fromRGB(255, 255, 255)
+}
 
-local function dragFrame(frame, dragArea)
-    local dragging = false
-    local dragInput, dragStart, startPos
+local s = Instance.new("ScreenGui", game.CoreGui)
+s.Name = "CornageUI"
 
-    dragArea.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = frame.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
+local main = Instance.new("Frame", s)
+main.Size = UDim2.new(0, 500, 0, 300)
+main.Position = UDim2.new(0.5, -250, 0.5, -150)
+main.BackgroundColor3 = g.main_color
+main.Active = true
+main.Draggable = true
+main.BorderSizePixel = 0
+
+local tbar = Instance.new("Frame", main)
+tbar.Size = UDim2.new(1, 0, 0, 30)
+tbar.BackgroundColor3 = g.accent_color
+tbar.BorderSizePixel = 0
+
+local title = Instance.new("TextLabel", tbar)
+title.Size = UDim2.new(1, 0, 1, 0)
+title.BackgroundTransparency = 1
+title.Text = "Cornage UI"
+title.TextColor3 = g.text_color
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 20
+
+local tbholder = Instance.new("Frame", main)
+tbholder.Position = UDim2.new(0, 0, 0, 30)
+tbholder.Size = UDim2.new(1, 0, 0, 40)
+tbholder.BackgroundTransparency = 1
+
+local content = Instance.new("Frame", main)
+content.Position = UDim2.new(0, 0, 0, 70)
+content.Size = UDim2.new(1, 0, 1, -70)
+content.BackgroundTransparency = 1
+
+local tabframes = {}
+
+function lib:tab(name)
+    local index = #tabframes + 1
+
+    local tab_btn = Instance.new("TextButton", tbholder)
+    tab_btn.Size = UDim2.new(0, 100, 1, 0)
+    tab_btn.Position = UDim2.new(0, (index - 1) * 100, 0, 0)
+    tab_btn.BackgroundColor3 = g.accent_color
+    tab_btn.TextColor3 = g.text_color
+    tab_btn.Text = name
+    tab_btn.Font = Enum.Font.SourceSans
+    tab_btn.TextSize = 18
+
+    local tab_frame = Instance.new("Frame", content)
+    tab_frame.Size = UDim2.new(1, 0, 1, 0)
+    tab_frame.BackgroundTransparency = 1
+    tab_frame.Visible = index == 1
+    tabframes[index] = tab_frame
+
+    tab_btn.MouseButton1Click:Connect(function()
+        for _, f in pairs(tabframes) do f.Visible = false end
+        tab_frame.Visible = true
     end)
 
-    dragArea.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
-
-    r.RenderStepped:Connect(function()
-        if dragging and dragInput then
-            local delta = dragInput.Position - dragStart
-            frame.Position = UDim2.new(
-                0,
-                math.clamp(startPos.X.Offset + delta.X, 0, workspace.CurrentCamera.ViewportSize.X - frame.AbsoluteSize.X),
-                0,
-                math.clamp(startPos.Y.Offset + delta.Y, 0, workspace.CurrentCamera.ViewportSize.Y - frame.AbsoluteSize.Y)
-            )
-        end
-    end)
-end
-
-function g.newWindow(title, index)
-    local w=Instance.new("Frame",sg)
-    w.BackgroundColor3=Color3.fromRGB(30,30,30)
-    w.BorderSizePixel=0
-    w.Size=UDim2.new(0,width,0,40)
-    w.Position=UDim2.new(0,(width+spacing)*(index-1)+spacing,0,yPos)
-    w.ClipsDescendants=true
-    w.ZIndex=100
-
-    local header=Instance.new("TextLabel",w)
-    header.Text=title
-    header.Font=Enum.Font.SourceSansBold
-    header.TextSize=22
-    header.TextColor3=Color3.new(1,1,1)
-    header.BackgroundColor3=Color3.fromRGB(50,50,50)
-    header.Size=UDim2.new(1,-40,0,40)
-    header.Position=UDim2.new(0,0,0,0)
-    header.TextXAlignment=Enum.TextXAlignment.Left
-    header.ClipsDescendants=true
-    header.Active=true
-
-    local toggleBtn=Instance.new("TextButton",w)
-    toggleBtn.Text = "+"
-    toggleBtn.Font=Enum.Font.SourceSansBold
-    toggleBtn.TextSize=28
-    toggleBtn.TextColor3=Color3.new(1,1,1)
-    toggleBtn.BackgroundColor3=Color3.fromRGB(70,70,70)
-    toggleBtn.Size=UDim2.new(0,40,0,40)
-    toggleBtn.Position=UDim2.new(0, w.Size.X.Offset - 40, 0, 0)
-    toggleBtn.AutoButtonColor=false
-
-    local content=Instance.new("Frame",w)
-    content.BackgroundColor3=Color3.fromRGB(40,40,40)
-    content.Size=UDim2.new(1,0,0,0)
-    content.Position=UDim2.new(0,0,0,40)
-    content.Visible=false
-
-    local layout=Instance.new("UIListLayout",content)
-    layout.Padding=UDim.new(0,5)
-    layout.SortOrder=Enum.SortOrder.LayoutOrder
-
-    local expanded = false
-
-    local function toggle()
-        expanded = not expanded
-        if expanded then
-            toggleBtn.Text = "–"
-            content.Visible=true
-            content.Size=UDim2.new(1,0,0,layout.AbsoluteContentSize.Y)
-            w.Size=UDim2.new(0,width,0,40 + layout.AbsoluteContentSize.Y)
-        else
-            toggleBtn.Text = "+"
-            content.Visible=false
-            content.Size=UDim2.new(1,0,0,0)
-            w.Size=UDim2.new(0,width,0,40)
-        end
-    end
-
-    toggleBtn.MouseButton1Click:Connect(toggle)
-    
-    -- Optional: toggle on header double-click
-    local lastClick=0
-    header.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local now=tick()
-            if now - lastClick < 0.3 then
-                toggle()
-            end
-            lastClick=now
-        end
-    end)
-
-    r.Heartbeat:Connect(function()
-        if expanded then
-            content.Size=UDim2.new(1,0,0,layout.AbsoluteContentSize.Y)
-            w.Size=UDim2.new(0,width,0,40 + layout.AbsoluteContentSize.Y)
-        end
-    end)
-
-    dragFrame(w, header)
-
-    local api = {}
-
-    function api.addButton(text, callback)
-        local btn = Instance.new("TextButton", content)
+    local tab_api = {}
+    function tab_api:button(text, callback)
+        local btn = Instance.new("TextButton", tab_frame)
+        btn.Size = UDim2.new(0, 200, 0, 30)
+        btn.Position = UDim2.new(0, 10, 0, #tab_frame:GetChildren() * 35)
+        btn.BackgroundColor3 = g.accent_color
+        btn.TextColor3 = g.text_color
+        btn.Font = Enum.Font.SourceSans
+        btn.TextSize = 16
         btn.Text = text
-        btn.Size = UDim2.new(1, -10, 0, 30)
-        btn.Position = UDim2.new(0, 5, 0, 0)
-        btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
-        btn.TextColor3 = Color3.new(1,1,1)
-        btn.Font = Enum.Font.SourceSans
-        btn.TextSize = 18
-        btn.AutoButtonColor = false
         btn.MouseButton1Click:Connect(callback)
-        return btn
     end
 
-    function api.addToggle(text, callback)
-        local state = false
-        local btn = Instance.new("TextButton", content)
-        btn.Text = text .. ": OFF"
-        btn.Size = UDim2.new(1, -10, 0, 30)
-        btn.Position = UDim2.new(0, 5, 0, 0)
-        btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
-        btn.TextColor3 = Color3.new(1,1,1)
-        btn.Font = Enum.Font.SourceSans
-        btn.TextSize = 18
-        btn.AutoButtonColor = false
-        btn.MouseButton1Click:Connect(function()
-            state = not state
-            btn.Text = text .. (state and ": ON" or ": OFF")
-            callback(state)
-        end)
-        return btn
-    end
-
-    api._frame = w
-    windows[#windows+1] = w
-
-    return api
+    return tab_api
 end
 
-return g
+return lib
