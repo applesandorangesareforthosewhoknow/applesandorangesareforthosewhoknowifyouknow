@@ -236,99 +236,103 @@ function a:Window(w)
         end)
     end
     function K:Slider(Y,Z,minV,maxV,callback,default,flags)
-        minV=minV or 0
-        maxV=maxV or 100
-        Z=Z or b.HttpService:GenerateGUID()
-        callback=callback or function() end
-        flags=flags or a.flags
-        local dragging=false
-        flags[Z]=default or minV
+    minV = minV or 0
+    maxV = maxV or 100
+    Z = Z or b.HttpService:GenerateGUID()
+    callback = callback or function() end
+    flags = flags or a.flags
+    local dragging = false
+    flags[Z] = default or minV
 
-        local sliderFrame=Instance.new("Frame")
-        local sliderButton=Instance.new("TextButton")
-        local sliderBack=Instance.new("Frame")
-        local sliderBackCorner=Instance.new("UICorner")
-        local sliderFill=Instance.new("Frame")
-        local sliderFillCorner=Instance.new("UICorner")
-        local sliderValueLabel=Instance.new("TextLabel")
+    local frame = Instance.new("Frame")
+    local btn = Instance.new("TextButton")
+    local back = Instance.new("Frame")
+    local backCorner = Instance.new("UICorner")
+    local fill = Instance.new("Frame")
+    local fillCorner = Instance.new("UICorner")
+    local valLabel = Instance.new("TextLabel")
 
-        sliderFrame.Name="SliderObj"
-        sliderFrame.Parent=E
-        sliderFrame.BackgroundColor3=Color3.fromRGB(43,43,43)
-        sliderFrame.BorderSizePixel=0
-        sliderFrame.Size=UDim2.new(0,203,0,36)
+    frame.Name = "SliderObj"
+    frame.Parent = E
+    frame.BackgroundColor3 = Color3.fromRGB(43,43,43)
+    frame.BorderSizePixel = 0
+    frame.Size = UDim2.new(0,203,0,36)
 
-        sliderButton.Name="SliderText"
-        sliderButton.Parent=sliderFrame
-        sliderButton.BackgroundTransparency=1
-        sliderButton.Size=UDim2.new(0,203,0,36)
-        sliderButton.Font=Enum.Font.Gotham
-        sliderButton.Text="  "..tostring(Y or "")
-        sliderButton.TextColor3=Color3.fromRGB(255,255,255)
-        sliderButton.TextSize=14
-        sliderButton.TextXAlignment=Enum.TextXAlignment.Left
+    btn.Name = "SliderText"
+    btn.Parent = frame
+    btn.BackgroundTransparency = 1
+    btn.Size = UDim2.new(0,203,0,36)
+    btn.Font = Enum.Font.Gotham
+    btn.Text = "  "..tostring(Y or "")
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.TextSize = 14
+    btn.TextXAlignment = Enum.TextXAlignment.Left
 
-        sliderBack.Name="SliderBack"
-        sliderBack.Parent=sliderFrame
-        sliderBack.BackgroundColor3=Color3.fromRGB(38,38,38)
-        sliderBack.BorderSizePixel=0
-        sliderBack.Position=UDim2.new(0.57,0,0.68,0)
-        sliderBack.Size=UDim2.new(0,80,0,7)
+    back.Name = "SliderBack"
+    back.Parent = frame
+    back.BackgroundColor3 = Color3.fromRGB(38,38,38)
+    back.BorderSizePixel = 0
+    back.Position = UDim2.new(0.57,0,0.68,0)
+    back.Size = UDim2.new(0,80,0,7)
 
-        sliderBackCorner.CornerRadius=UDim.new(0,4)
-        sliderBackCorner.Parent=sliderBack
+    backCorner.CornerRadius = UDim.new(0,4)
+    backCorner.Parent = back
 
-        sliderFill.Name="SliderPart"
-        sliderFill.Parent=sliderBack
-        sliderFill.BackgroundColor3=Color3.fromRGB(131,133,255)
-        sliderFill.BorderSizePixel=0
-        sliderFill.Size=UDim2.new(((default or minV)-minV)/(maxV-minV),0,1,0)
+    fill.Name = "SliderPart"
+    fill.Parent = back
+    fill.BackgroundColor3 = Color3.fromRGB(131,133,255)
+    fill.BorderSizePixel = 0
+    local initialScale = ((default or minV) - minV) / (maxV - minV)
+    fill.Size = UDim2.new(initialScale,0,1,0)
 
-        sliderFillCorner.CornerRadius=UDim.new(0,4)
-        sliderFillCorner.Parent=sliderFill
+    fillCorner.CornerRadius = UDim.new(0,4)
+    fillCorner.Parent = fill
 
-        sliderValueLabel.Name="SliderValue"
-        sliderValueLabel.Parent=sliderFrame
-        sliderValueLabel.BackgroundTransparency=1
-        sliderValueLabel.Position=UDim2.new(0.57,0,0.17,0)
-        sliderValueLabel.Size=UDim2.new(0,80,0,16)
-        sliderValueLabel.Font=Enum.Font.Code
-        sliderValueLabel.Text=tostring(default or minV)
-        sliderValueLabel.TextColor3=Color3.fromRGB(255,255,255)
-        sliderValueLabel.TextSize=14
+    valLabel.Name = "SliderValue"
+    valLabel.Parent = frame
+    valLabel.BackgroundTransparency = 1
+    valLabel.Position = UDim2.new(0.57,0,0.17,0)
+    valLabel.Size = UDim2.new(0,80,0,16)
+    valLabel.Font = Enum.Font.Code
+    valLabel.Text = tostring(default or minV)
+    valLabel.TextColor3 = Color3.fromRGB(255,255,255)
+    valLabel.TextSize = 14
 
-        if default and default~=minV then callback(default) end
-
-        local function updateSlider(input)
-            local scale=math.clamp((input.Position.X-sliderBack.AbsolutePosition.X)/sliderBack.AbsoluteSize.X,0,1)
-            sliderFill:TweenSize(UDim2.new(scale,0,1,0),Enum.EasingDirection.InOut,Enum.EasingStyle.Linear,0.05,true)
-            local val=math.floor(scale*(maxV-minV)+minV)
-            sliderValueLabel.Text=tostring(val)
-            flags[Z]=val
-            callback(val)
-        end
-
-        sliderButton.InputBegan:Connect(function(input)
-            if input.UserInputType==Enum.UserInputType.MouseButton1 then
-                dragging=true
-                updateSlider(input)
-            end
-        end)
-
-        sliderButton.InputEnded:Connect(function(input)
-            if input.UserInputType==Enum.UserInputType.MouseButton1 then
-                dragging=false
-            end
-        end)
-
-        b.UserInputService.InputChanged:Connect(function(input)
-            if dragging and input.UserInputType==Enum.UserInputType.MouseMovement then
-                updateSlider(input)
-            end
-        end)
-
-        return sliderFrame
+    if default and default ~= minV then
+        callback(default)
     end
+
+    local function updateSlider(input)
+        local scale = math.clamp((input.Position.X - back.AbsolutePosition.X) / back.AbsoluteSize.X, 0, 1)
+        fill:TweenSize(UDim2.new(scale,0,1,0), Enum.EasingDirection.InOut, Enum.EasingStyle.Linear, 0.05, true)
+        local val = math.floor(scale * (maxV - minV) + minV)
+        valLabel.Text = tostring(val)
+        flags[Z] = val
+        callback(val)
+    end
+
+    btn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            updateSlider(input)
+        end
+    end)
+
+    btn.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
+    b.UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            updateSlider(input)
+        end
+    end)
+
+    return frame
+end
+
     return K
 end
 return a
