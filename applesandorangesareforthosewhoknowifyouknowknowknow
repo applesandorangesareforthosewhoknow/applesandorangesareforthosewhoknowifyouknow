@@ -8,23 +8,76 @@ sg.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
 local g={}
 local windows = {}
 
-function g.newWindow(title)
+local spacing = 10
+local width = 300
+local yPos = 50
+
+local function dragFrame(frame, dragArea)
+    local dragging = false
+    local dragInput, dragStart, startPos
+
+    dragArea.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    dragArea.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+
+    r.RenderStepped:Connect(function()
+        if dragging and dragInput then
+            local delta = dragInput.Position - dragStart
+            frame.Position = UDim2.new(
+                0,
+               	math.clamp(startPos.X.Offset + delta.X, 0, workspace.CurrentCamera.ViewportSize.X - frame.AbsoluteSize.X),
+                0,
+               	math.clamp(startPos.Y.Offset + delta.Y, 0, workspace.CurrentCamera.ViewportSize.Y - frame.AbsoluteSize.Y)
+            )
+        end
+    end)
+end
+
+function g.newWindow(title, index)
     local w=Instance.new("Frame",sg)
     w.BackgroundColor3=Color3.fromRGB(30,30,30)
     w.BorderSizePixel=0
-    w.Size=UDim2.new(0,300,0,40)
-    w.Position=UDim2.new(0,10 + (#windows)*(310),0,50)
+    w.Size=UDim2.new(0,width,0,40)
+    w.Position=UDim2.new(0,(width+spacing)*(index-1)+spacing,0,yPos)
     w.ClipsDescendants=true
-    w.ZIndex = 100
+    w.ZIndex=100
 
-    local header=Instance.new("TextButton",w)
+    local header=Instance.new("TextLabel",w)
     header.Text=title
     header.Font=Enum.Font.SourceSansBold
     header.TextSize=22
     header.TextColor3=Color3.new(1,1,1)
     header.BackgroundColor3=Color3.fromRGB(50,50,50)
-    header.Size=UDim2.new(1,0,0,40)
-    header.AutoButtonColor=false
+    header.Size=UDim2.new(1,-40,0,40)
+    header.Position=UDim2.new(0,0,0,0)
+    header.TextXAlignment=Enum.TextXAlignment.Left
+    header.ClipsDescendants=true
+    header.Active=true
+
+    local toggleBtn=Instance.new("TextButton",w)
+    toggleBtn.Text = "+"
+    toggleBtn.Font=Enum.Font.SourceSansBold
+    toggleBtn.TextSize=28
+    toggleBtn.TextColor3=Color3.new(1,1,1)
+    toggleBtn.BackgroundColor3=Color3.fromRGB(70,70,70)
+    toggleBtn.Size=UDim2.new(0,40,0,40)
+    toggleBtn.Position=UDim2.new(1,-40,0,0)
+    toggleBtn.AutoButtonColor=false
 
     local content=Instance.new("Frame",w)
     content.BackgroundColor3=Color3.fromRGB(40,40,40)
@@ -41,24 +94,40 @@ function g.newWindow(title)
     local function toggle()
         expanded = not expanded
         if expanded then
+            toggleBtn.Text = "–"
             content.Visible=true
             content.Size=UDim2.new(1,0,0,layout.AbsoluteContentSize.Y)
-            w.Size=UDim2.new(0,300,0,40 + layout.AbsoluteContentSize.Y)
+            w.Size=UDim2.new(0,width,0,40 + layout.AbsoluteContentSize.Y)
         else
+            toggleBtn.Text = "+"
             content.Visible=false
             content.Size=UDim2.new(1,0,0,0)
-            w.Size=UDim2.new(0,300,0,40)
+            w.Size=UDim2.new(0,width,0,40)
         end
     end
 
-    header.MouseButton1Click:Connect(toggle)
+    toggleBtn.MouseButton1Click:Connect(toggle)
+    
+    -- Also toggle on header double-click (optional)
+    local lastClick=0
+    header.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local now=tick()
+            if now - lastClick < 0.3 then
+                toggle()
+            end
+            lastClick=now
+        end
+    end)
 
     r.Heartbeat:Connect(function()
         if expanded then
             content.Size=UDim2.new(1,0,0,layout.AbsoluteContentSize.Y)
-            w.Size=UDim2.new(0,300,0,40 + layout.AbsoluteContentSize.Y)
+            w.Size=UDim2.new(0,width,0,40 + layout.AbsoluteContentSize.Y)
         end
     end)
+
+    dragFrame(w, header)
 
     local api = {}
 
