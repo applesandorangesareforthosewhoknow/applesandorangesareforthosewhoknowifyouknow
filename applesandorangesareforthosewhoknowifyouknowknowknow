@@ -1,84 +1,69 @@
 local lib = {}
 
-local uis = game:GetService("UserInputService")
-local plr = game.Players.LocalPlayer
-
 local g = {
-    main_color = Color3.fromRGB(30, 30, 30),
-    accent_color = Color3.fromRGB(60, 60, 60),
+    tab_color = Color3.fromRGB(50, 50, 50),
+    btn_color = Color3.fromRGB(30, 30, 30),
     text_color = Color3.fromRGB(255, 255, 255)
 }
 
 local s = Instance.new("ScreenGui", game.CoreGui)
-s.Name = "CornageUI"
+s.Name = "CornageUI_Lite"
 
-local main = Instance.new("Frame", s)
-main.Size = UDim2.new(0, 500, 0, 300)
-main.Position = UDim2.new(0.5, -250, 0.5, -150)
-main.BackgroundColor3 = g.main_color
-main.Active = true
-main.Draggable = true
-main.BorderSizePixel = 0
-
-local tbar = Instance.new("Frame", main)
-tbar.Size = UDim2.new(1, 0, 0, 30)
-tbar.BackgroundColor3 = g.accent_color
-tbar.BorderSizePixel = 0
-
-local title = Instance.new("TextLabel", tbar)
-title.Size = UDim2.new(1, 0, 1, 0)
-title.BackgroundTransparency = 1
-title.Text = "Cornage UI"
-title.TextColor3 = g.text_color
-title.Font = Enum.Font.SourceSansBold
-title.TextSize = 20
-
-local tbholder = Instance.new("Frame", main)
-tbholder.Position = UDim2.new(0, 0, 0, 30)
-tbholder.Size = UDim2.new(1, 0, 0, 40)
-tbholder.BackgroundTransparency = 1
-
-local content = Instance.new("Frame", main)
-content.Position = UDim2.new(0, 0, 0, 70)
-content.Size = UDim2.new(1, 0, 1, -70)
-content.BackgroundTransparency = 1
-
-local tabframes = {}
+local tabholder = Instance.new("Frame", s)
+tabholder.Size = UDim2.new(0, 600, 0, 40)
+tabholder.Position = UDim2.new(0, 10, 0, 10)
+tabholder.BackgroundTransparency = 1
 
 function lib:tab(name)
-    local index = #tabframes + 1
+    local tframe = Instance.new("Frame", s)
+    tframe.Size = UDim2.new(0, 600, 0, 0)
+    tframe.Position = UDim2.new(0, 10, 0, 60)
+    tframe.BackgroundTransparency = 1
+    tframe.Visible = false
 
-    local tab_btn = Instance.new("TextButton", tbholder)
-    tab_btn.Size = UDim2.new(0, 100, 1, 0)
-    tab_btn.Position = UDim2.new(0, (index - 1) * 100, 0, 0)
-    tab_btn.BackgroundColor3 = g.accent_color
-    tab_btn.TextColor3 = g.text_color
-    tab_btn.Text = name
-    tab_btn.Font = Enum.Font.SourceSans
-    tab_btn.TextSize = 18
+    local tab = Instance.new("Frame", tabholder)
+    tab.Size = UDim2.new(0, 150, 0, 40)
+    tab.Position = UDim2.new(0, #tabholder:GetChildren() * 155 - 155, 0, 0)
+    tab.BackgroundColor3 = g.tab_color
 
-    local tab_frame = Instance.new("Frame", content)
-    tab_frame.Size = UDim2.new(1, 0, 1, 0)
-    tab_frame.BackgroundTransparency = 1
-    tab_frame.Visible = index == 1
-    tabframes[index] = tab_frame
+    local label = Instance.new("TextLabel", tab)
+    label.Size = UDim2.new(0.8, 0, 1, 0)
+    label.Position = UDim2.new(0, 5, 0, 0)
+    label.Text = name
+    label.TextColor3 = g.text_color
+    label.Font = Enum.Font.SourceSans
+    label.TextSize = 18
+    label.BackgroundTransparency = 1
+    label.TextXAlignment = Enum.TextXAlignment.Left
 
-    tab_btn.MouseButton1Click:Connect(function()
-        for _, f in pairs(tabframes) do f.Visible = false end
-        tab_frame.Visible = true
+    local toggle = Instance.new("TextButton", tab)
+    toggle.Size = UDim2.new(0.2, -5, 1, 0)
+    toggle.Position = UDim2.new(0.8, 0, 0, 0)
+    toggle.Text = "+"
+    toggle.TextColor3 = g.text_color
+    toggle.Font = Enum.Font.SourceSansBold
+    toggle.TextSize = 22
+    toggle.BackgroundTransparency = 1
+
+    local open = false
+    toggle.MouseButton1Click:Connect(function()
+        open = not open
+        tframe.Visible = open
+        toggle.Text = open and "-" or "+"
     end)
 
     local tab_api = {}
     function tab_api:button(text, callback)
-        local btn = Instance.new("TextButton", tab_frame)
-        btn.Size = UDim2.new(0, 200, 0, 30)
-        btn.Position = UDim2.new(0, 10, 0, #tab_frame:GetChildren() * 35)
-        btn.BackgroundColor3 = g.accent_color
+        local btn = Instance.new("TextButton", tframe)
+        btn.Size = UDim2.new(0, 580, 0, 30)
+        btn.Position = UDim2.new(0, 10, 0, #tframe:GetChildren() * 35)
+        btn.BackgroundColor3 = g.btn_color
+        btn.Text = text
         btn.TextColor3 = g.text_color
         btn.Font = Enum.Font.SourceSans
         btn.TextSize = 16
-        btn.Text = text
         btn.MouseButton1Click:Connect(callback)
+        tframe.Size = UDim2.new(0, 600, 0, #tframe:GetChildren() * 35)
     end
 
     return tab_api
