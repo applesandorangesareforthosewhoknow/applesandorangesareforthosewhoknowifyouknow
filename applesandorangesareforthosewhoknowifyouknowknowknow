@@ -1,343 +1,334 @@
-local A={windowCount=0,flags={}}
-local B=setmetatable({},{
+local a={wc=0,f={}}
+local b=setmetatable({},{
  __index=function(_,k)return game:GetService(k)end,
  __newindex=function()end
 })
-local C=B.Players.LocalPlayer
-local D=C:GetMouse()
-local E
-function F(G,H)
- if E then E.ZIndex=-2 end
- E=G
- E.ZIndex=-1
- H=H or G
- local I,J,K,L
- local function M(N)
-  local O=N.Position-K
-  G.Position=UDim2.new(L.X.Scale,L.X.Offset+O.X,L.Y.Scale,L.Y.Offset+O.Y)
+local g
+local m=b.Players.LocalPlayer:GetMouse()
+function Drag(o,p)
+ if g then g.ZIndex=-2 end
+ g=o
+ g.ZIndex=-1
+ p=p or o
+ local k,l,m,n
+ local function q(r)
+  local s=r.Position-m
+  o.Position=UDim2.new(n.X.Scale,n.X.Offset+s.X,n.Y.Scale,n.Y.Offset+s.Y)
  end
- H.InputBegan:Connect(function(N)
-  if N.UserInputType==Enum.UserInputType.MouseButton1 then
-   I=true
-   K=N.Position
-   L=G.Position
-   N.Changed:Connect(function()if N.UserInputState==Enum.UserInputState.End then I=false end end)
+ p.InputBegan:Connect(function(r)
+  if r.UserInputType==Enum.UserInputType.MouseButton1 then
+   k=true
+   m=r.Position
+   n=o.Position
+   r.Changed:Connect(function()
+    if r.UserInputState==Enum.UserInputState.End then k=false end
+   end)
   end
  end)
- G.InputChanged:Connect(function(N)if N.UserInputType==Enum.UserInputType.MouseMovement then J=N end end)
- B.UserInputService.InputChanged:Connect(function(N)if N==J and I then M(N) end end)
-end
-function N(O)
- spawn(function()
-  if not O.ClipsDescendants then O.ClipsDescendants=true end
-  local P=Instance.new("ImageLabel")
-  P.Name="Ripple"
-  P.Parent=O
-  P.BackgroundColor3=Color3.new(1,1,1)
-  P.BackgroundTransparency=1
-  P.ZIndex=8
-  P.Image="rbxassetid://2708891598"
-  P.ImageTransparency=0.8
-  P.ScaleType=Enum.ScaleType.Fit
-  P.ImageColor3=Color3.fromRGB(131,132,255)
-  P.Position=UDim2.new((D.X-P.AbsolutePosition.X)/O.AbsoluteSize.X,0,(D.Y-P.AbsolutePosition.Y)/O.AbsoluteSize.Y,0)
-  B.TweenService:Create(P,TweenInfo.new(1),{Position=UDim2.new(-5.5,0,-5.5,0),Size=UDim2.new(12,0,12,0)}):Play()
-  wait(.25)
-  B.TweenService:Create(P,TweenInfo.new(.5),{ImageTransparency=1}):Play()
-  repeat wait() until P.ImageTransparency==1
-  P:Destroy()
+ o.InputChanged:Connect(function(r)
+  if r.UserInputType==Enum.UserInputType.MouseMovement then l=r end
+ end)
+ b.UserInputService.InputChanged:Connect(function(r)
+  if r==l and k then q(r) end
  end)
 end
-local Q=Instance.new("ScreenGui")
-Q.Name=B.HttpService:GenerateGUID()
-Q.Parent=B.RunService:IsStudio() and C:WaitForChild("PlayerGui") or B.CoreGui
-B.UserInputService.InputBegan:Connect(function(R,S)
- if R.KeyCode==Enum.KeyCode.LeftShift and not S then Q.Enabled=not Q.Enabled end
+function ClickEffect(r)
+ spawn(function()
+  if not r.ClipsDescendants then r.ClipsDescendants=true end
+  local s=Instance.new("ImageLabel")
+  s.Name="Ripple"
+  s.Parent=r
+  s.BackgroundColor3=Color3.new(1,1,1)
+  s.BackgroundTransparency=1
+  s.ZIndex=8
+  s.Image="rbxassetid://2708891598"
+  s.ImageTransparency=0.8
+  s.ScaleType=Enum.ScaleType.Fit
+  s.ImageColor3=Color3.fromRGB(131,132,255)
+  s.Position=UDim2.new((m.X-s.AbsolutePosition.X)/r.AbsoluteSize.X,0,(m.Y-s.AbsolutePosition.Y)/r.AbsoluteSize.Y,0)
+  b.TweenService:Create(s,TweenInfo.new(1),{Position=UDim2.new(-5.5,0,-5.5,0),Size=UDim2.new(12,0,12,0)}):Play()
+  wait(0.25)
+  b.TweenService:Create(s,TweenInfo.new(0.5),{ImageTransparency=1}):Play()
+  repeat wait() until s.ImageTransparency==1
+  s:Destroy()
+ end)
+end
+local t=Instance.new("ScreenGui")
+t.Name=b.HttpService:GenerateGUID()
+t.Parent=(b.RunService:IsStudio() and b.Players.LocalPlayer:WaitForChild("PlayerGui")) or b.CoreGui
+b.UserInputService.InputBegan:Connect(function(u,v)
+ if u.KeyCode==Enum.KeyCode.LeftShift and not v then t.Enabled=not t.Enabled end
 end)
-function A:Window(T)
- local U=false
- A.windowCount=A.windowCount+1
- local V=Instance.new("Frame")
- local W=Instance.new("Frame")
- local X=Instance.new("UIGradient")
- local Y=Instance.new("TextLabel")
- local Z=Instance.new("TextButton")
- local aa=Instance.new("ImageLabel")
- local ab=Instance.new("Frame")
- local ac=Instance.new("UIListLayout")
- local ad=Instance.new("Frame")
- V.Name="Top"
- V.Parent=Q
- V.BackgroundColor3=Color3.fromRGB(43,43,43)
- V.BorderSizePixel=0
- V.Position=UDim2.new(0,25,0,-30+36*A.windowCount+6*A.windowCount)
- V.Size=UDim2.new(0,212,0,36)
- F(V)
- W.Name="WindowLine"
- W.Parent=V
- W.BackgroundColor3=Color3.new(1,1,1)
- W.BorderSizePixel=0
- W.Position=UDim2.new(0,0,0,34)
- W.Size=UDim2.new(0,212,0,2)
- X.Color=ColorSequence.new{
+function a:Window(w)
+ local x=false
+ a.wc=a.wc+1
+ local y=Instance.new("Frame")
+ local z=Instance.new("Frame")
+ local A=Instance.new("UIGradient")
+ local B=Instance.new("TextLabel")
+ local C=Instance.new("TextButton")
+ local D=Instance.new("ImageLabel")
+ local E=Instance.new("Frame")
+ local F=Instance.new("UIListLayout")
+ local G=Instance.new("Frame")
+ y.Name="Top"
+ y.Parent=t
+ y.BackgroundColor3=Color3.fromRGB(43,43,43)
+ y.BorderSizePixel=0
+ y.Position=UDim2.new(0,25,0,-30+36*a.wc+6*a.wc)
+ y.Size=UDim2.new(0,212,0,36)
+ Drag(y)
+ z.Name="WindowLine"
+ z.Parent=y
+ z.BackgroundColor3=Color3.fromRGB(255,255,255)
+ z.BorderSizePixel=0
+ z.Position=UDim2.new(0,0,0,34)
+ z.Size=UDim2.new(0,212,0,2)
+ A.Color=ColorSequence.new{
   ColorSequenceKeypoint.new(0,Color3.fromRGB(43,43,43)),
-  ColorSequenceKeypoint.new(.2,Color3.fromRGB(43,43,43)),
-  ColorSequenceKeypoint.new(.5,Color3.fromRGB(131,132,255)),
-  ColorSequenceKeypoint.new(.8,Color3.fromRGB(43,43,43)),
+  ColorSequenceKeypoint.new(0.2,Color3.fromRGB(43,43,43)),
+  ColorSequenceKeypoint.new(0.5,Color3.fromRGB(131,132,255)),
+  ColorSequenceKeypoint.new(0.8,Color3.fromRGB(43,43,43)),
   ColorSequenceKeypoint.new(1,Color3.fromRGB(43,43,43))
  }
- X.Name="WindowLineGradient"
- X.Parent=W
- Y.Name="Header"
- Y.Parent=V
- Y.BackgroundTransparency=1
- Y.BorderSizePixel=0
- Y.Size=UDim2.new(0,54,0,34)
- Y.Font=Enum.Font.GothamSemibold
- Y.Text="   "..tostring(T)or""
- Y.TextColor3=Color3.new(1,1,1)
- Y.TextSize=14
- Y.TextXAlignment=Enum.TextXAlignment.Left
- Z.Name="WindowToggle"
- Z.Parent=V
- Z.BackgroundTransparency=1
- Z.BorderSizePixel=0
- Z.Position=UDim2.new(0.835270762,0,0,0)
- Z.Size=UDim2.new(0,34,0,34)
- Z.Font=Enum.Font.SourceSans
- Z.Text=""
- aa.Name="WindowToggleImg"
- aa.Parent=Z
- aa.AnchorPoint=Vector2.new(.5,.5)
- aa.BackgroundTransparency=1
- aa.BorderSizePixel=0
- aa.Position=UDim2.new(.5,0,.5,0)
- aa.Size=UDim2.new(0,18,0,18)
- aa.Image="rbxassetid://3926305904"
- aa.ImageRectOffset=Vector2.new(524,764)
- aa.ImageRectSize=Vector2.new(36,36)
- aa.Rotation=180
- ab.Name="Bottom"
- ab.Parent=V
- ab.BackgroundColor3=Color3.fromRGB(38,38,38)
- ab.BorderSizePixel=0
- ab.ClipsDescendants=true
- ab.Position=UDim2.new(0,0,1,0)
- ab.Size=UDim2.new(0,212,0,0)
- ac.Name="BottomLayout"
- ac.Parent=ab
- ac.HorizontalAlignment=Enum.HorizontalAlignment.Center
- ac.SortOrder=Enum.SortOrder.LayoutOrder
- ac.Padding=UDim.new(0,4)
- ad.Name="PaddingThing"
- ad.Parent=ab
- ad.BackgroundColor3=Color3.new(1,1,1)
- ad.BorderSizePixel=0
- ad.Position=UDim2.new(0.263033181,0,0,0)
- ad.Size=UDim2.new(0,100,0,0)
- local ae=false
- local function af()
-  if ae then return end
-  U=not U
-  ae=true
-  B.TweenService:Create(ab,TweenInfo.new(.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{Size=UDim2.new(0,212,0,U and ac.AbsoluteContentSize.Y+4 or 0)}):Play()
-  B.TweenService:Create(aa,TweenInfo.new(.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{Rotation=U and 0 or 180}):Play()
-  wait(.25)
-  ae=false
+ A.Name="WindowLineGradient"
+ A.Parent=z
+ B.Name="Header"
+ B.Parent=y
+ B.BackgroundTransparency=1
+ B.Size=UDim2.new(0,54,0,34)
+ B.Font=Enum.Font.GothamSemibold
+ B.Text="   "..tostring(w or "")
+ B.TextColor3=Color3.fromRGB(255,255,255)
+ B.TextSize=14
+ B.TextXAlignment=Enum.TextXAlignment.Left
+ C.Name="WindowToggle"
+ C.Parent=y
+ C.BackgroundTransparency=1
+ C.Position=UDim2.new(0.835,0,0,0)
+ C.Size=UDim2.new(0,34,0,34)
+ C.Font=Enum.Font.SourceSans
+ C.Text=""
+ D.Name="WindowToggleImg"
+ D.Parent=C
+ D.AnchorPoint=Vector2.new(0.5,0.5)
+ D.BackgroundTransparency=1
+ D.Position=UDim2.new(0.5,0,0.5,0)
+ D.Size=UDim2.new(0,18,0,18)
+ D.Image="rbxassetid://3926305904"
+ D.ImageRectOffset=Vector2.new(524,764)
+ D.ImageRectSize=Vector2.new(36,36)
+ D.Rotation=180
+ E.Name="Bottom"
+ E.Parent=y
+ E.BackgroundColor3=Color3.fromRGB(38,38,38)
+ E.BorderSizePixel=0
+ E.ClipsDescendants=true
+ E.Position=UDim2.new(0,0,1,0)
+ E.Size=UDim2.new(0,212,0,0)
+ F.Name="BottomLayout"
+ F.Parent=E
+ F.HorizontalAlignment=Enum.HorizontalAlignment.Center
+ F.SortOrder=Enum.SortOrder.LayoutOrder
+ F.Padding=UDim.new(0,4)
+ G.Name="PaddingThing"
+ G.Parent=E
+ G.BackgroundColor3=Color3.fromRGB(255,255,255)
+ G.BorderSizePixel=0
+ G.Position=UDim2.new(0.263,0,0,0)
+ G.Size=UDim2.new(0,100,0,0)
+ local H=false
+ local function I()
+  if H then return end
+  x=not x
+  H=true
+  b.TweenService:Create(E,TweenInfo.new(0.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{Size=UDim2.new(0,212,0,x and F.AbsoluteContentSize.Y+4 or 0)}):Play()
+  b.TweenService:Create(D,TweenInfo.new(0.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{Rotation=x and 0 or 180}):Play()
+  wait(0.25)
+  H=false
  end
- local function ag()
-  if ae or not U then return end
-  ab.Size=UDim2.new(0,212,0,ac.AbsoluteContentSize.Y+4)
+ local function J()
+  if H or not x then return end
+  E.Size=UDim2.new(0,212,0,F.AbsoluteContentSize.Y+4)
  end
- ac:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(ag)
- Z.MouseButton1Click:Connect(af)
- local ah={}
- function ah:Label(ai)
-  local aj=Instance.new("TextButton")
-  aj.Name="Label"
-  aj.Parent=ab
-  aj.BackgroundColor3=Color3.fromRGB(43,43,43)
-  aj.BorderSizePixel=0
-  aj.Position=UDim2.new(0.0212264154,0,0.71676302,0)
-  aj.Size=UDim2.new(0,203,0,26)
-  aj.AutoButtonColor=false
-  aj.Font=Enum.Font.GothamSemibold
-  aj.Text=tostring(ai)or""
-  aj.TextColor3=Color3.new(1,1,1)
-  aj.TextSize=14
-  return aj
+ F:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(J)
+ C.MouseButton1Click:Connect(I)
+ local K={}
+ function K:Label(L)
+  local M=Instance.new("TextButton")
+  M.Name="Label"
+  M.Parent=E
+  M.BackgroundColor3=Color3.fromRGB(43,43,43)
+  M.BorderSizePixel=0
+  M.Size=UDim2.new(0,203,0,26)
+  M.AutoButtonColor=false
+  M.Font=Enum.Font.GothamSemibold
+  M.Text=tostring(L or "")
+  M.TextColor3=Color3.fromRGB(255,255,255)
+  M.TextSize=14
+  return M
  end
- function ah:Button(ai,aj)
-  local ak=Instance.new("Frame")
-  local al=Instance.new("TextButton")
-  aj=aj or function()end
-  ak.Name="ButtonObj"
-  ak.Parent=ab
-  ak.BackgroundColor3=Color3.fromRGB(43,43,43)
-  ak.BorderSizePixel=0
-  ak.Position=UDim2.new(0,0,0.0172413792,0)
-  ak.Size=UDim2.new(0,203,0,36)
-  al.Name="Button"
-  al.Parent=ak
-  al.BackgroundTransparency=1
-  al.BorderSizePixel=0
-  al.Size=UDim2.new(0,203,0,36)
-  al.Font=Enum.Font.Gotham
-  al.Text="  "..tostring(ai)or""
-  al.TextColor3=Color3.new(1,1,1)
-  al.TextSize=14
-  al.TextXAlignment=Enum.TextXAlignment.Left
-  al.MouseEnter:Connect(function()
-   B.TweenService:Create(ak,TweenInfo.new(.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{BackgroundColor3=Color3.fromRGB(55,55,55)}):Play()
+ function K:Button(L,N)
+  local O=Instance.new("Frame")
+  local P=Instance.new("TextButton")
+  N=N or function() end
+  O.Name="ButtonObj"
+  O.Parent=E
+  O.BackgroundColor3=Color3.fromRGB(43,43,43)
+  O.BorderSizePixel=0
+  O.Size=UDim2.new(0,203,0,36)
+  P.Name="Button"
+  P.Parent=O
+  P.BackgroundTransparency=1
+  P.Size=UDim2.new(0,203,0,36)
+  P.Font=Enum.Font.Gotham
+  P.Text="  "..tostring(L or "")
+  P.TextColor3=Color3.fromRGB(255,255,255)
+  P.TextSize=14
+  P.TextXAlignment=Enum.TextXAlignment.Left
+  P.MouseEnter:Connect(function()
+   b.TweenService:Create(O,TweenInfo.new(0.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{BackgroundColor3=Color3.fromRGB(55,55,55)}):Play()
   end)
-  al.MouseLeave:Connect(function()
-   B.TweenService:Create(ak,TweenInfo.new(.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{BackgroundColor3=Color3.fromRGB(43,43,43)}):Play()
+  P.MouseLeave:Connect(function()
+   b.TweenService:Create(O,TweenInfo.new(0.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{BackgroundColor3=Color3.fromRGB(43,43,43)}):Play()
   end)
-  al.MouseButton1Click:Connect(function()
-   spawn(function()N(al)end)
-   aj()
+  P.MouseButton1Click:Connect(function()
+   spawn(function() ClickEffect(P) end)
+   N()
   end)
  end
- function ah:Toggle(ai,aj,ak,al,am)
-  am=am or A.flags
-  aj=aj or B.HttpService:GenerateGUID()
-  ak=ak or false
-  al=al or function()end
-  am[aj]=ak
-  local an=Instance.new("Frame")
-  local ao=Instance.new("TextButton")
-  local ap=Instance.new("Frame")
-  local aq=Instance.new("UICorner")
-  an.Name="ToggleObj"
-  an.Parent=ab
-  an.BackgroundColor3=Color3.fromRGB(43,43,43)
-  an.BorderSizePixel=0
-  an.Position=UDim2.new(0,0,0.0172413792,0)
-  an.Size=UDim2.new(0,203,0,36)
-  ao.Name="ToggleText"
-  ao.Parent=an
-  ao.BackgroundTransparency=1
-  ao.BorderSizePixel=0
-  ao.Size=UDim2.new(0,203,0,36)
-  ao.Font=Enum.Font.Gotham
-  ao.Text="  "..tostring(ai)or""
-  ao.TextColor3=Color3.new(1,1,1)
-  ao.TextSize=14
-  ao.TextXAlignment=Enum.TextXAlignment.Left
-  ap.Name="ToggleStatus"
-  ap.Parent=an
-  ap.AnchorPoint=Vector2.new(0,.5)
-  ap.BackgroundColor3=ak and Color3.fromRGB(14,255,110) or Color3.fromRGB(255,44,44)
-  ap.BorderSizePixel=0
-  ap.Position=UDim2.new(0.847443342,0,.5,0)
-  ap.Size=UDim2.new(0,24,0,24)
-  aq.CornerRadius=UDim.new(0,4)
-  aq.Name="ToggleStatusRound"
-  aq.Parent=ap
-  if ak then al(true) end
-  ao.MouseEnter:Connect(function()
-   B.TweenService:Create(an,TweenInfo.new(.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{BackgroundColor3=Color3.fromRGB(55,55,55)}):Play()
+ function K:Toggle(Q,R,S,N,T)
+  T=T or a.f
+  R=R or b.HttpService:GenerateGUID()
+  S=S or false
+  N=N or function() end
+  T[R]=S
+  local U=Instance.new("Frame")
+  local V=Instance.new("TextButton")
+  local W=Instance.new("Frame")
+  local X=Instance.new("UICorner")
+  U.Name="ToggleObj"
+  U.Parent=E
+  U.BackgroundColor3=Color3.fromRGB(43,43,43)
+  U.BorderSizePixel=0
+  U.Size=UDim2.new(0,203,0,36)
+  V.Name="ToggleText"
+  V.Parent=U
+  V.BackgroundTransparency=1
+  V.Size=UDim2.new(0,203,0,36)
+  V.Font=Enum.Font.Gotham
+  V.Text="  "..tostring(Q or "")
+  V.TextColor3=Color3.fromRGB(255,255,255)
+  V.TextSize=14
+  V.TextXAlignment=Enum.TextXAlignment.Left
+  W.Name="ToggleStatus"
+  W.Parent=U
+  W.AnchorPoint=Vector2.new(0,0.5)
+  W.BackgroundColor3=S and Color3.fromRGB(14,255,110) or Color3.fromRGB(255,44,44)
+  W.BorderSizePixel=0
+  W.Position=UDim2.new(0.847,0,0.5,0)
+  W.Size=UDim2.new(0,24,0,24)
+  X.CornerRadius=UDim.new(0,4)
+  X.Parent=W
+  if S then N(true) end
+  V.MouseEnter:Connect(function()
+   b.TweenService:Create(U,TweenInfo.new(0.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{BackgroundColor3=Color3.fromRGB(55,55,55)}):Play()
   end)
-  ao.MouseLeave:Connect(function()
-   B.TweenService:Create(an,TweenInfo.new(.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{BackgroundColor3=Color3.fromRGB(43,43,43)}):Play()
+  V.MouseLeave:Connect(function()
+   b.TweenService:Create(U,TweenInfo.new(0.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{BackgroundColor3=Color3.fromRGB(43,43,43)}):Play()
   end)
-  ao.MouseButton1Click:Connect(function()
-   am[aj]=not am[aj]
+  V.MouseButton1Click:Connect(function()
+   T[R]=not T[R]
    spawn(function()
-    B.TweenService:Create(ap,TweenInfo.new(.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{BackgroundColor3=am[aj] and Color3.fromRGB(14,255,110) or Color3.fromRGB(255,44,44)}):Play()
+    b.TweenService:Create(W,TweenInfo.new(0.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{BackgroundColor3=T[R] and Color3.fromRGB(14,255,110) or Color3.fromRGB(255,44,44)}):Play()
    end)
-   spawn(function()N(ao)end)
-   al(am[aj])
+   spawn(function() ClickEffect(V) end)
+   N(T[R])
   end)
  end
- function ah:Slider(ai,aj,ak,al,am,an,ao)
-  ak=ak or 0
-  al=al or 100
-  aj=aj or B.HttpService:GenerateGUID()
-  am=am or function()end
-  ao=ao or A.flags
-  ao[aj]=an or ak
-  local ap=false
-  local aq=Instance.new("Frame")
-  local ar=Instance.new("TextButton")
-  local as=Instance.new("Frame")
-  local at=Instance.new("UICorner")
-  local au=Instance.new("Frame")
-  local av=Instance.new("UICorner")
-  local aw=Instance.new("TextLabel")
-  aq.Name="SliderObj"
-  aq.Parent=ab
-  aq.BackgroundColor3=Color3.fromRGB(43,43,43)
-  aq.BorderSizePixel=0
-  aq.Position=UDim2.new(0,0,0.0172413792,0)
-  aq.Size=UDim2.new(0,203,0,36)
-  ar.Name="SliderText"
-  ar.Parent=aq
-  ar.BackgroundTransparency=1
-  ar.BorderSizePixel=0
-  ar.Size=UDim2.new(0,203,0,36)
-  ar.Font=Enum.Font.Gotham
-  ar.Text="  "..tostring(ai)or""
-  ar.TextColor3=Color3.new(1,1,1)
-  ar.TextSize=14
-  ar.TextXAlignment=Enum.TextXAlignment.Left
-  as.Name="SliderBack"
-  as.Parent=aq
-  as.BackgroundColor3=Color3.fromRGB(38,38,38)
-  as.BorderSizePixel=0
-  as.Position=UDim2.new(0.571,0,0.68,0)
-  as.Size=UDim2.new(0,80,0,7)
-  at.CornerRadius=UDim.new(0,4)
-  at.Name="SliderBackRound"
-  at.Parent=as
-  au.Name="SliderPart"
-  au.Parent=as
-  au.BackgroundColor3=Color3.fromRGB(131,133,255)
-  au.BorderSizePixel=0
-  au.Size=UDim2.new((an or 0)/al,0,1,0)
-  av.CornerRadius=UDim.new(0,4)
-  av.Name="SliderPartRound"
-  av.Parent=au
-  aw.Name="SliderValue"
-  aw.Parent=aq
-  aw.BackgroundTransparency=1
-  aw.BorderSizePixel=0
-  aw.Position=UDim2.new(0.571,0,0.167,0)
-  aw.Size=UDim2.new(0,80,0,16)
-  aw.Font=Enum.Font.Code
-  aw.Text=an or ak
-  aw.TextColor3=Color3.new(1,1,1)
-  aw.TextSize=14
-  if an and an~=ak then am(an) end
-  local function ax(N)
-   local ay=UDim2.new(math.clamp((N.Position.X-as.AbsolutePosition.X)/as.AbsoluteSize.X,0,1),0,1,0)
-   au:TweenSize(ay,Enum.EasingDirection.InOut,Enum.EasingStyle.Linear,0.05,true)
-   local az=math.floor(ay.X.Scale*al/al*(al-ak)+ak)
-   aw.Text=tostring(az)
-   ao[aj]=az
-   am(az)
+ function K:Slider(Y,Z,a0,aN,N,S,T)
+  local a1=a0 or 0
+  local a2=aN or 100
+  local a3=Z or b.HttpService:GenerateGUID()
+  N=N or function() end
+  T=T or a.f
+  local k=false
+  T[a3]=S or a1
+  local a4=Instance.new("Frame")
+  local a5=Instance.new("TextButton")
+  local a6=Instance.new("Frame")
+  local a7=Instance.new("UICorner")
+  local a8=Instance.new("Frame")
+  local a9=Instance.new("UICorner")
+  local aa=Instance.new("TextLabel")
+  a4.Name="SliderObj"
+  a4.Parent=E
+  a4.BackgroundColor3=Color3.fromRGB(43,43,43)
+  a4.BorderSizePixel=0
+  a4.Size=UDim2.new(0,203,0,36)
+  a5.Name="SliderText"
+  a5.Parent=a4
+  a5.BackgroundTransparency=1
+  a5.Size=UDim2.new(0,203,0,36)
+  a5.Font=Enum.Font.Gotham
+  a5.Text="  "..tostring(Y or "")
+  a5.TextColor3=Color3.fromRGB(255,255,255)
+  a5.TextSize=14
+  a5.TextXAlignment=Enum.TextXAlignment.Left
+  a6.Name="SliderBack"
+  a6.Parent=a4
+  a6.BackgroundColor3=Color3.fromRGB(38,38,38)
+  a6.BorderSizePixel=0
+  a6.Position=UDim2.new(0.571,0,0.68,0)
+  a6.Size=UDim2.new(0,80,0,7)
+  a7.CornerRadius=UDim.new(0,4)
+  a7.Parent=a6
+  a8.Name="SliderPart"
+  a8.Parent=a6
+  a8.BackgroundColor3=Color3.fromRGB(131,133,255)
+  a8.BorderSizePixel=0
+  a8.Size=UDim2.new(((S or 0)/a2),0,1,0)
+  a9.CornerRadius=UDim.new(0,4)
+  a9.Parent=a8
+  aa.Name="SliderValue"
+  aa.Parent=a4
+  aa.BackgroundTransparency=1
+  aa.Position=UDim2.new(0.571,0,0.167,0)
+  aa.Size=UDim2.new(0,80,0,16)
+  aa.Font=Enum.Font.Code
+  aa.Text=S or a1
+  aa.TextColor3=Color3.fromRGB(255,255,255)
+  aa.TextSize=14
+  if S and S~=a1 then N(S) end
+  local function ab(p)
+   local ac=UDim2.new(math.clamp((p.Position.X-a6.AbsolutePosition.X)/a6.AbsoluteSize.X,0,1),0,1,0)
+   a8:TweenSize(ac,Enum.EasingDirection.InOut,Enum.EasingStyle.Linear,0.05,true)
+   local ad=math.floor(ac.X.Scale*(a2-a1)+a1)
+   aa.Text=tostring(ad)
+   T[a3]=ad
+   N(ad)
   end
-  ar.InputBegan:Connect(function(N)
-   if N.UserInputType==Enum.UserInputType.MouseButton1 then
+  a5.InputBegan:Connect(function(p)
+   if p.UserInputType==Enum.UserInputType.MouseButton1 then
     spawn(function()
-     B.TweenService:Create(au,TweenInfo.new(0.15),{BackgroundColor3=Color3.new(1,1,1)}):Play()
+     b.TweenService:Create(a8,TweenInfo.new(0.15),{BackgroundColor3=Color3.new(1,1,1)}):Play()
     end)
-    ax(N)
-    ap=true
+    ab(p)
+    k=true
    end
   end)
-  ar.InputEnded:Connect(function(N)
-   if N.UserInputType==Enum.UserInputType.MouseButton1 then
+  a5.InputEnded:Connect(function(p)
+   if p.UserInputType==Enum.UserInputType.MouseButton1 then
     spawn(function()
-     B.TweenService:Create(au,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(131,133,255)}):Play()
+     b.TweenService:Create(a8,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(131,133,255)}):Play()
     end)
-    ap=false
+    k=false
    end
   end)
-  B.UserInputService.InputChanged:Connect(function(N)
-   if ap and N.UserInputType==Enum.UserInputType.MouseMovement then ax(N) end
+  b.UserInputService.InputChanged:Connect(function(p)
+   if k and p.UserInputType==Enum.UserInputType.MouseMovement then ab(p) end
   end)
  end
- return ah
+ return K
 end
-return A
+return a
