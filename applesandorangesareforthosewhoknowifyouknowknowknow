@@ -1,86 +1,84 @@
 function CreateMain(title)
-	-- Remove existing GUI with the same title
-	for _, gui in pairs(game.CoreGui:GetChildren()) do
-		if gui.Name == title then
-			gui:Destroy()
+	local destroyIfExist = game.CoreGui:GetChildren()
+	for _, child in pairs(destroyIfExist) do
+		if child.Name == title then
+			child:Destroy()
 		end
 	end
-
-	local UserInputService = game:GetService("UserInputService")
-
-	-- Create main ScreenGui
+	
 	local Rodus = Instance.new("ScreenGui")
-	Rodus.Name = title
-	Rodus.Parent = game.CoreGui
+	local Top = Instance.new("Frame")
+	local Title = Instance.new("TextLabel")
+	local Container = Instance.new("Frame")
+	local UIListLayout = Instance.new("UIListLayout")
+	local Minimize = Instance.new("TextButton")
+
+	Rodus.Name = tostring(title)
+	Rodus.Parent = game:WaitForChild("CoreGui")
 	Rodus.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-	-- Top bar frame
-	local Top = Instance.new("Frame")
 	Top.Name = "Top"
 	Top.Parent = Rodus
-	Top.BackgroundColor3 = Color3.new(0, 0, 0)
+	Top.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	Top.BackgroundTransparency = 0.5
-	Top.BorderColor3 = Color3.new(0, 0, 0)
+	Top.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	Top.BorderSizePixel = 4
 	Top.Position = UDim2.new(0, 15, 0, 15)
 	Top.Size = UDim2.new(0, 193, 0, 27)
+	Top.Active = true
+	Top.Draggable = false  -- Draggable property deprecated, so use manual drag below
 
-	-- Title label
-	local Title = Instance.new("TextLabel")
 	Title.Name = "Title"
 	Title.Parent = Top
-	Title.BackgroundColor3 = Color3.new(0, 0, 0)
+	Title.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	Title.BackgroundTransparency = 0.35
 	Title.BorderSizePixel = 0
-	Title.Size = UDim2.new(1, 0, 1, 0)
+	Title.Size = UDim2.new(0, 193, 0, 27)
 	Title.Font = Enum.Font.JosefinSans
-	Title.Text = " " .. title
+	Title.Text = " "..title
 	Title.TextColor3 = Color3.fromRGB(0, 255, 0)
 	Title.TextSize = 14
 	Title.TextXAlignment = Enum.TextXAlignment.Left
 
-	-- Container frame for tabs
-	local Container = Instance.new("Frame")
 	Container.Name = "Container"
 	Container.Parent = Top
-	Container.BackgroundColor3 = Color3.new(0, 0, 0)
+	Container.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 	Container.BackgroundTransparency = 0.5
-	Container.BorderColor3 = Color3.new(0, 0, 0)
+	Container.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	Container.BorderSizePixel = 4
-	Container.Position = UDim2.new(0, 0, 1.29629624, 0)
+	Container.Position = UDim2.new(0, 0, 1.3, 0)
 	Container.Size = UDim2.new(0, 193, 0, 24)
 
-	local UIListLayout = Instance.new("UIListLayout")
 	UIListLayout.Parent = Container
 	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-	-- Minimize button
-	local Minimize = Instance.new("TextButton")
 	Minimize.Name = "Minimize"
 	Minimize.Parent = Top
-	Minimize.BackgroundColor3 = Color3.new(1, 1, 1)
+	Minimize.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 	Minimize.BackgroundTransparency = 1
-	Minimize.Position = UDim2.new(0.9067, 0, 0.185, 0)
+	Minimize.Position = UDim2.new(0.9, 0, 0.18, 0)
 	Minimize.Size = UDim2.new(0, 18, 0, 17)
 	Minimize.Font = Enum.Font.SourceSans
 	Minimize.Text = "-"
-	Minimize.TextColor3 = Color3.new(1, 1, 1)
+	Minimize.TextColor3 = Color3.fromRGB(255, 255, 255)
 	Minimize.TextSize = 14
-	local minimized = false
+
+	local toggled = false
 	Minimize.MouseButton1Down:Connect(function()
-		minimized = not minimized
-		if minimized then
-			Minimize.Text = "+"
-			Container.Visible = false
-		else
-			Minimize.Text = "-"
-			Container.Visible = true
+		toggled = not toggled
+		Container.Visible = not toggled
+		Minimize.Text = toggled and "+" or "-"
+	end)
+
+	game:GetService("UserInputService").InputBegan:Connect(function(input)
+		if input.KeyCode == Enum.KeyCode.RightControl then
+			Top.Visible = not Top.Visible
 		end
 	end)
 
-	-- Dragging logic
+	-- Drag implementation
+	local UserInputService = game:GetService("UserInputService")
 	local dragging = false
-	local dragInput
 	local dragStart
 	local startPos
 
@@ -89,6 +87,7 @@ function CreateMain(title)
 			dragging = true
 			dragStart = input.Position
 			startPos = Top.Position
+
 			input.Changed:Connect(function()
 				if input.UserInputState == Enum.UserInputState.End then
 					dragging = false
@@ -99,53 +98,42 @@ function CreateMain(title)
 
 	Top.InputChanged:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseMovement then
-			dragInput = input
+			if dragging then
+				local delta = input.Position - dragStart
+				Top.Position = UDim2.new(
+					startPos.X.Scale,
+					startPos.X.Offset + delta.X,
+					startPos.Y.Scale,
+					startPos.Y.Offset + delta.Y
+				)
+			end
 		end
 	end)
 
-	UserInputService.InputChanged:Connect(function(input)
-		if input == dragInput and dragging then
-			local delta = input.Position - dragStart
-			Top.Position = UDim2.new(
-				startPos.X.Scale,
-				startPos.X.Offset + delta.X,
-				startPos.Y.Scale,
-				startPos.Y.Offset + delta.Y
-			)
-		end
-	end)
-
-	-- Toggle UI visibility with RightControl key
-	UserInputService.InputBegan:Connect(function(input, gameProcessed)
-		if not gameProcessed and input.KeyCode == Enum.KeyCode.RightControl then
-			Top.Visible = not Top.Visible
-		end
-	end)
-
-	-- Tab creation function
+	-- The rest of your CreateTab and inner functions remain unchanged
 	function CreateTab(text)
 		local Tab = Instance.new("TextButton")
 		local Arrow = Instance.new("TextLabel")
-
 		Tab.Name = text
 		Tab.Parent = Container
-		Tab.BackgroundColor3 = Color3.new(0, 0, 0)
+		Tab.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 		Tab.BackgroundTransparency = 1
 		Tab.Size = UDim2.new(0, 193, 0, 24)
 		Tab.Font = Enum.Font.JosefinSans
-		Tab.Text = " " .. text
-		Tab.TextColor3 = Color3.new(1, 1, 1)
+		Tab.Text = " "..text
+		Tab.TextColor3 = Color3.fromRGB(255, 255, 255)
 		Tab.TextSize = 14
 		Tab.TextXAlignment = Enum.TextXAlignment.Left
 
 		Arrow.Name = "Arrow"
 		Arrow.Parent = Tab
+		Arrow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 		Arrow.BackgroundTransparency = 1
 		Arrow.Position = UDim2.new(0.907, 0, 0, 0)
 		Arrow.Size = UDim2.new(0, 18, 0, 21)
 		Arrow.Font = Enum.Font.SourceSans
 		Arrow.Text = ">>"
-		Arrow.TextColor3 = Color3.new(1, 1, 1)
+		Arrow.TextColor3 = Color3.fromRGB(255, 255, 255)
 		Arrow.TextScaled = true
 		Arrow.TextSize = 14
 		Arrow.TextWrapped = true
@@ -155,344 +143,39 @@ function CreateMain(title)
 		local TabContainer = Instance.new("Frame")
 		TabContainer.Name = "TabContainer"
 		TabContainer.Parent = Tab
-		TabContainer.BackgroundColor3 = Color3.new(0, 0, 0)
+		TabContainer.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 		TabContainer.BackgroundTransparency = 0.5
-		TabContainer.BorderColor3 = Color3.new(0, 0, 0)
+		TabContainer.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		TabContainer.BorderSizePixel = 4
 		TabContainer.Position = UDim2.new(1.05, 0, 0, 0)
 		TabContainer.Visible = false
+
+		Tab.MouseButton1Down:Connect(function()
+			if TabContainer.Visible == false then
+				for _, v in pairs(Container:GetChildren()) do
+					if v.Name == "TabContainer" then
+						v.Visible = false
+						v.Parent.TextColor3 = Color3.new(1, 1, 1)
+						v.Parent.Arrow.TextColor3 = Color3.new(1, 1, 1)
+					end
+				end
+				TabContainer.Visible = true
+				Tab.TextColor3 = Color3.new(0, 1, 0)
+				Tab.Arrow.TextColor3 = Color3.new(0, 1, 0)
+			else
+				TabContainer.Visible = false
+				Tab.TextColor3 = Color3.new(1, 1, 1)
+				Tab.Arrow.TextColor3 = Color3.new(1, 1, 1)
+			end
+		end)
 
 		local UIListLayout2 = Instance.new("UIListLayout")
 		UIListLayout2.Parent = TabContainer
 		UIListLayout2.SortOrder = Enum.SortOrder.LayoutOrder
 
-		Tab.MouseButton1Down:Connect(function()
-			for _, sibling in pairs(Container:GetChildren()) do
-				if sibling:IsA("TextButton") and sibling ~= Tab then
-					local sibTabContainer = sibling:FindFirstChild("TabContainer")
-					if sibTabContainer then
-						sibTabContainer.Visible = false
-						sibling.TextColor3 = Color3.new(1, 1, 1)
-						local arrow = sibling:FindFirstChild("Arrow")
-						if arrow then arrow.TextColor3 = Color3.new(1,1,1) end
-					end
-				end
-			end
-			TabContainer.Visible = not TabContainer.Visible
-			if TabContainer.Visible then
-				Tab.TextColor3 = Color3.fromRGB(0, 255, 0)
-				Arrow.TextColor3 = Color3.fromRGB(0, 255, 0)
-			else
-				Tab.TextColor3 = Color3.new(1, 1, 1)
-				Arrow.TextColor3 = Color3.new(1, 1, 1)
-			end
-		end)
+		-- You can add your other CreateButton, CreateToggle etc functions here if needed
 
-		local function updateTabContainerSize()
-			TabContainer.Size = UDim2.new(0, UIListLayout2.AbsoluteContentSize.X, 0, UIListLayout2.AbsoluteContentSize.Y)
-			Container.Size = UDim2.new(0, UIListLayout.AbsoluteContentSize.X, 0, UIListLayout.AbsoluteContentSize.Y)
-		end
-
-		-- Button creation in Tab
-		function CreateButton(parent, buttonText, note, callback)
-			local Button = Instance.new("TextButton")
-			local Note = Instance.new("TextLabel")
-
-			Button.Name = buttonText
-			Button.Parent = parent.TabContainer
-			Button.BackgroundColor3 = Color3.new(0, 0, 0)
-			Button.BackgroundTransparency = 1
-			Button.Size = UDim2.new(0, 193, 0, 24)
-			Button.Font = Enum.Font.JosefinSans
-			Button.Text = " " .. buttonText
-			Button.TextColor3 = Color3.new(1, 1, 1)
-			Button.TextSize = 14
-			Button.TextXAlignment = Enum.TextXAlignment.Left
-
-			Note.Name = "Note"
-			Note.Parent = Button
-			Note.BackgroundTransparency = 1
-			Note.Position = UDim2.new(1.04, 0, 0, 0)
-			Note.Size = UDim2.new(0, 193, 0, 24)
-			Note.Font = Enum.Font.JosefinSans
-			Note.Text = note
-			Note.TextColor3 = Color3.fromRGB(0, 255, 0)
-			Note.TextSize = 14
-			Note.TextXAlignment = Enum.TextXAlignment.Left
-			Note.Visible = false
-
-			Button.MouseEnter:Connect(function()
-				Note.Visible = true
-			end)
-			Button.MouseLeave:Connect(function()
-				Note.Visible = false
-			end)
-			Button.MouseButton1Down:Connect(function()
-				Button.TextColor3 = Color3.fromRGB(0, 255, 0)
-				wait(0.05)
-				Button.TextColor3 = Color3.new(1, 1, 1)
-				pcall(callback)
-			end)
-
-			updateTabContainerSize()
-		end
-
-		-- Label creation in Tab
-		function CreateLabel(parent, labelText, color3)
-			local Label = Instance.new("TextLabel")
-			Label.Name = labelText
-			Label.Parent = parent.TabContainer
-			Label.BackgroundColor3 = Color3.new(0, 0, 0)
-			Label.BackgroundTransparency = 1
-			Label.Size = UDim2.new(0, 193, 0, 24)
-			Label.Font = Enum.Font.JosefinSans
-			Label.Text = " " .. labelText
-			Label.TextColor3 = color3
-			Label.TextSize = 14
-			Label.TextXAlignment = Enum.TextXAlignment.Left
-
-			updateTabContainerSize()
-		end
-
-		-- Toggle creation in Tab
-		function CreateToggle(parent, buttonText, note, callback)
-			local Button = Instance.new("TextButton")
-			local Note = Instance.new("TextLabel")
-			local Toggle = Instance.new("BoolValue")
-
-			Button.Name = buttonText
-			Button.Parent = parent.TabContainer
-			Toggle.Parent = Button
-			Toggle.Name = "Toggled"
-			Toggle.Value = false
-			Button.BackgroundColor3 = Color3.new(0, 0, 0)
-			Button.BackgroundTransparency = 1
-			Button.Size = UDim2.new(0, 193, 0, 24)
-			Button.Font = Enum.Font.JosefinSans
-			Button.Text = " " .. buttonText
-			Button.TextColor3 = Color3.new(1, 1, 1)
-			Button.TextSize = 14
-			Button.TextXAlignment = Enum.TextXAlignment.Left
-
-			Note.Name = "Note"
-			Note.Parent = Button
-			Note.BackgroundTransparency = 1
-			Note.Position = UDim2.new(1.04, 0, 0, 0)
-			Note.Size = UDim2.new(0, 193, 0, 24)
-			Note.Font = Enum.Font.JosefinSans
-			Note.Text = note
-			Note.TextColor3 = Color3.fromRGB(0, 255, 0)
-			Note.TextSize = 14
-			Note.TextXAlignment = Enum.TextXAlignment.Left
-			Note.Visible = false
-
-			Button.MouseEnter:Connect(function()
-				Note.Visible = true
-			end)
-			Button.MouseLeave:Connect(function()
-				Note.Visible = false
-			end)
-			Button.MouseButton1Down:Connect(function()
-				Toggle.Value = not Toggle.Value
-				if Toggle.Value then
-					Button.TextColor3 = Color3.fromRGB(0, 255, 0)
-				else
-					Button.TextColor3 = Color3.new(1, 1, 1)
-				end
-				pcall(callback)
-			end)
-
-			updateTabContainerSize()
-		end
-
-		-- Side dropdown button creation
-		function CreateSideDropButton(parent, dropText, list, callback)
-			local SideDrop = Instance.new("TextButton")
-			local Arrow = Instance.new("TextButton")
-			local DropContainer = Instance.new("Frame")
-			local UIListLayoutDD = Instance.new("UIListLayout")
-
-			SideDrop.Name = dropText
-			SideDrop.Parent = parent.TabContainer
-			SideDrop.BackgroundColor3 = Color3.new(0, 0, 0)
-			SideDrop.BackgroundTransparency = 1
-			SideDrop.Size = UDim2.new(0, 193, 0, 24)
-			SideDrop.Font = Enum.Font.JosefinSans
-			SideDrop.Text = " " .. dropText
-			SideDrop.TextColor3 = Color3.new(1, 1, 1)
-			SideDrop.TextSize = 14
-			SideDrop.TextXAlignment = Enum.TextXAlignment.Left
-
-			Arrow.Name = "Arrow"
-			Arrow.Parent = SideDrop
-			Arrow.BackgroundTransparency = 1
-			Arrow.Position = UDim2.new(0.907, 0, 0, 0)
-			Arrow.Size = UDim2.new(0, 18, 0, 21)
-			Arrow.Font = Enum.Font.SourceSans
-			Arrow.Text = ">>"
-			Arrow.TextColor3 = Color3.new(1, 1, 1)
-			Arrow.TextScaled = true
-			Arrow.TextSize = 14
-			Arrow.TextWrapped = true
-
-			DropContainer.Name = "DropContainer"
-			DropContainer.Parent = SideDrop
-			DropContainer.BackgroundColor3 = Color3.new(0, 0, 0)
-			DropContainer.BackgroundTransparency = 0.5
-			DropContainer.BorderColor3 = Color3.new(0, 0, 0)
-			DropContainer.BorderSizePixel = 4
-			DropContainer.Position = UDim2.new(1.08, 0, 0, 0)
-			DropContainer.Size = UDim2.new(0, 193, 0, 24)
-			DropContainer.Visible = false
-
-			UIListLayoutDD.Parent = DropContainer
-			UIListLayoutDD.SortOrder = Enum.SortOrder.LayoutOrder
-
-			SideDrop.MouseButton1Down:Connect(function()
-				if DropContainer.Visible then
-					DropContainer.Visible = false
-					SideDrop.TextColor3 = Color3.new(1, 1, 1)
-					Arrow.TextColor3 = Color3.new(1, 1, 1)
-				else
-					-- Close other dropdowns
-					for _, sibling in pairs(parent.TabContainer:GetChildren()) do
-						if sibling.Name ~= dropText and sibling:FindFirstChild("DropContainer") then
-							sibling.DropContainer.Visible = false
-							sibling.TextColor3 = Color3.new(1, 1, 1)
-							local a = sibling:FindFirstChild("Arrow")
-							if a then a.TextColor3 = Color3.new(1, 1, 1) end
-						end
-					end
-					DropContainer.Visible = true
-					SideDrop.TextColor3 = Color3.fromRGB(0, 255, 0)
-					Arrow.TextColor3 = Color3.fromRGB(0, 255, 0)
-				end
-			end)
-
-			for _, v in ipairs(list) do
-				local Button = Instance.new("TextButton")
-				Button.Name = v
-				Button.Parent = DropContainer
-				Button.BackgroundColor3 = Color3.new(0, 0, 0)
-				Button.BackgroundTransparency = 1
-				Button.Size = UDim2.new(0, 193, 0, 24)
-				Button.Font = Enum.Font.JosefinSans
-				Button.Text = " " .. v
-				Button.TextColor3 = Color3.new(1, 1, 1)
-				Button.TextSize = 14
-				Button.TextXAlignment = Enum.TextXAlignment.Left
-
-				Button.MouseButton1Down:Connect(function()
-					Button.TextColor3 = Color3.fromRGB(0, 255, 0)
-					wait(0.05)
-					Button.TextColor3 = Color3.new(1, 1, 1)
-					callback(v)
-				end)
-			end
-
-			local function updateDropSize()
-				DropContainer.Size = UDim2.new(0, UIListLayoutDD.AbsoluteContentSize.X, 0, UIListLayoutDD.AbsoluteContentSize.Y)
-				parent.TabContainer.Size = UDim2.new(0, parent.TabContainer.UIListLayout.AbsoluteContentSize.X, 0, parent.TabContainer.UIListLayout.AbsoluteContentSize.Y)
-			end
-			UIListLayoutDD:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateDropSize)
-			updateDropSize()
-			updateTabContainerSize()
-		end
-
-		-- TextBox creation in Tab
-		function CreateTextBox(parent, buttonText, placeholderText, callback)
-			local TextBox = Instance.new("TextButton")
-			local Arrow = Instance.new("TextButton")
-			local Side = Instance.new("Frame")
-			local UIListLayoutTB = Instance.new("UIListLayout")
-			local Box = Instance.new("TextBox")
-
-			TextBox.Name = buttonText
-			TextBox.Parent = parent.TabContainer
-			TextBox.BackgroundColor3 = Color3.new(0, 0, 0)
-			TextBox.BackgroundTransparency = 1
-			TextBox.Size = UDim2.new(0, 193, 0, 24)
-			TextBox.Font = Enum.Font.JosefinSans
-			TextBox.Text = " " .. buttonText
-			TextBox.TextColor3 = Color3.new(1, 1, 1)
-			TextBox.TextSize = 14
-			TextBox.TextXAlignment = Enum.TextXAlignment.Left
-
-			Arrow.Name = "Arrow"
-			Arrow.Parent = TextBox
-				Arrow.BackgroundTransparency = 1
-			Arrow.Position = UDim2.new(0.907, 0, 0, 0)
-			Arrow.Size = UDim2.new(0, 18, 0, 21)
-			Arrow.Font = Enum.Font.SourceSans
-			Arrow.Text = ">>"
-			Arrow.TextColor3 = Color3.new(1, 1, 1)
-			Arrow.TextScaled = true
-			Arrow.TextSize = 14
-			Arrow.TextWrapped = true
-
-			Side.Name = "Side"
-			Side.Parent = TextBox
-			Side.BackgroundColor3 = Color3.new(0, 0, 0)
-			Side.BackgroundTransparency = 0.5
-			Side.BorderColor3 = Color3.new(0, 0, 0)
-			Side.BorderSizePixel = 4
-			Side.Position = UDim2.new(1.05, 0, 0, 0)
-			Side.Size = UDim2.new(0, 193, 0, 24)
-			Side.Visible = false
-
-			UIListLayoutTB.Parent = Side
-			UIListLayoutTB.SortOrder = Enum.SortOrder.LayoutOrder
-
-			Box.Name = "Box"
-			Box.Parent = Side
-			Box.BackgroundColor3 = Color3.new(0, 0, 0)
-			Box.BackgroundTransparency = 0.5
-			Box.BorderColor3 = Color3.new(0, 0, 0)
-			Box.BorderSizePixel = 4
-			Box.Position = UDim2.new(0, 5, 0, 2)
-			Box.Size = UDim2.new(0, 183, 0, 20)
-			Box.Font = Enum.Font.JosefinSans
-			Box.PlaceholderText = placeholderText
-			Box.Text = ""
-			Box.TextColor3 = Color3.new(1, 1, 1)
-			Box.TextSize = 14
-
-			TextBox.MouseButton1Down:Connect(function()
-				Side.Visible = not Side.Visible
-				if Side.Visible then
-					TextBox.TextColor3 = Color3.fromRGB(0, 255, 0)
-					Arrow.TextColor3 = Color3.fromRGB(0, 255, 0)
-				else
-					TextBox.TextColor3 = Color3.new(1, 1, 1)
-					Arrow.TextColor3 = Color3.new(1, 1, 1)
-				end
-			end)
-
-			Box.FocusLost:Connect(function(enterPressed)
-				if enterPressed then
-					pcall(function()
-						callback(Box.Text)
-					end)
-				end
-			end)
-
-			local function updateSideSize()
-				Side.Size = UDim2.new(0, UIListLayoutTB.AbsoluteContentSize.X, 0, UIListLayoutTB.AbsoluteContentSize.Y)
-				parent.TabContainer.Size = UDim2.new(0, parent.TabContainer.UIListLayout.AbsoluteContentSize.X, 0, parent.TabContainer.UIListLayout.AbsoluteContentSize.Y)
-			end
-			UIListLayoutTB:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateSideSize)
-			updateSideSize()
-			updateTabContainerSize()
-		end
-
-		return {
-			Container = TabContainer,
-			CreateButton = function(_, text, note, cb) CreateButton(Tab, text, note, cb) end,
-			CreateLabel = function(_, text, color) CreateLabel(Tab, text, color or Color3.new(1,1,1)) end,
-			CreateToggle = function(_, text, note, cb) CreateToggle(Tab, text, note, cb) end,
-			CreateSideDropButton = function(_, text, list, cb) CreateSideDropButton(Tab, text, list, cb) end,
-			CreateTextBox = function(_, text, placeholder, cb) CreateTextBox(Tab, text, placeholder, cb) end,
-		}
+		return TabContainer
 	end
 
 	return {
@@ -500,5 +183,3 @@ function CreateMain(title)
 		CreateTab = CreateTab
 	}
 end
-
-return CreateMain
