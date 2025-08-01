@@ -13,8 +13,9 @@ function g.newWindow(title)
     w.BackgroundColor3=Color3.fromRGB(30,30,30)
     w.BorderSizePixel=0
     w.Size=UDim2.new(0,300,0,40)
-    w.Position=UDim2.new(0,10,0,#windows*45+10)
+    w.Position=UDim2.new(0,10 + (#windows)*(310),0,50)
     w.ClipsDescendants=true
+    w.ZIndex = 100
 
     local header=Instance.new("TextButton",w)
     header.Text=title
@@ -94,9 +95,9 @@ function g.newWindow(title)
         return btn
     end
 
-    -- Add more control creators here as needed
-
+    api._frame = w
     windows[#windows+1] = w
+
     return api
 end
 
