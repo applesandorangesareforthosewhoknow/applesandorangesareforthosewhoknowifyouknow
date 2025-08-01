@@ -18,23 +18,33 @@ gui.ResetOnSpawn = false
 
 local tab_count = 0
 
-local function make_draggable(f)
-    local drag = false
-    local offset
-    f.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then
-            drag = true
-            offset = i.Position - f.Position
+local function make_draggable(frame)
+    local dragging = false
+    local dragInput, mousePos, framePos
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            mousePos = input.Position
+            framePos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
         end
     end)
-    uis.InputEnded:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then
-            drag = false
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
         end
     end)
-    uis.InputChanged:Connect(function(i)
-        if drag and i.UserInputType == Enum.UserInputType.MouseMovement then
-            f.Position = UDim2.new(0, i.Position.X - offset.X, 0, i.Position.Y - offset.Y)
+
+    uis.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - mousePos
+            frame.Position = UDim2.new(0, framePos.X.Offset + delta.X, 0, framePos.Y.Offset + delta.Y)
         end
     end)
 end
@@ -88,7 +98,7 @@ function lib:tab(name)
     function t:button(txt, fn)
         local b = Instance.new("TextButton", content)
         b.Size = UDim2.new(1, -10, 0, 30)
-        b.Position = UDim2.new(0, 5, 0, #content:GetChildren() * 35)
+        b.Position = UDim2.new(0, 5, 0, (#content:GetChildren() - 1) * 35)
         b.BackgroundColor3 = g.btn_color
         b.TextColor3 = g.text_color
         b.Font = Enum.Font.SourceSans
