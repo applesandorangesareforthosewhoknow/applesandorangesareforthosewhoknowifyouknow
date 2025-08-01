@@ -1,89 +1,104 @@
-local hs, ts, usr, run, plr = game:GetService("HttpService"), game:GetService("TweenService"), game:GetService("UserInputService"), game:GetService("RunService"), game:GetService("Players").LocalPlayer
-local mouse = plr:GetMouse()
-local ui={windowCount=0,flags={}}
-local gui=Instance.new("ScreenGui")
-gui.Name=hs:GenerateGUID(false)
-gui.Parent=run:IsStudio() and plr:WaitForChild("PlayerGui") or game:GetService("CoreGui")
-local function rn()return hs:GenerateGUID(false)end
-local dragging,dragInput,dragStart,startPos
-local function Drag(f,a)
-	a=a or f
-	a.InputBegan:Connect(function(i)
+local ui={count=0,flags={}}
+local s=setmetatable({},{
+	__index=function(_,k)return game:GetService(k)end,
+	__newindex=function()end
+})
+local plr=s.Players.LocalPlayer
+local mouse=plr:GetMouse()
+local usr=s.UserInputService
+local ts=s.TweenService
+local function drag(f,d)
+	d=d or f
+	local drag,di,ds,sp
+	d.InputBegan:Connect(function(i)
 		if i.UserInputType==Enum.UserInputType.MouseButton1 then
-			dragging=true;dragInput=i;dragStart=i.Position;startPos=f.Position
-			i.Changed:Connect(function()if i.UserInputState==Enum.UserInputState.End then dragging=false end end)
+			drag=true
+			ds=i.Position
+			sp=f.Position
+			i.Changed:Connect(function()
+				if i.UserInputState==Enum.UserInputState.End then drag=false end
+			end)
 		end
 	end)
-	a.InputChanged:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseMovement then dragInput=i end end)
+	d.InputChanged:Connect(function(i)
+		if i.UserInputType==Enum.UserInputType.MouseMovement then di=i end
+	end)
 	usr.InputChanged:Connect(function(i)
-		if dragging and i==dragInput then
-			local d=i.Position-dragStart
-			f.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+d.X,startPos.Y.Scale,startPos.Y.Offset+d.Y)
+		if i==di and drag then
+			local delta=i.Position - ds
+			f.Position=UDim2.new(sp.X.Scale,sp.X.Offset+delta.X,sp.Y.Scale,sp.Y.Offset+delta.Y)
 		end
 	end)
 end
-local function ClickEffect(b)
-	spawn(function()
-		if not b.ClipsDescendants then b.ClipsDescendants=true end
-		local r=Instance.new("ImageLabel",b)
-		r.Name=rn()
-		r.BackgroundColor3=Color3.new(1,1,1)
+local function clickEff(p)
+	coroutine.wrap(function()
+		if not p.ClipsDescendants then p.ClipsDescendants=true end
+		local r=Instance.new("ImageLabel",p)
+		r.Name="Ripple"
 		r.BackgroundTransparency=1
 		r.ZIndex=8
 		r.Image="rbxassetid://2708891598"
 		r.ImageTransparency=0.8
 		r.ScaleType=Enum.ScaleType.Fit
 		r.ImageColor3=Color3.fromRGB(131,132,255)
-		r.Position=UDim2.new((mouse.X-r.AbsolutePosition.X)/b.AbsoluteSize.X,0,(mouse.Y-r.AbsolutePosition.Y)/b.AbsoluteSize.Y,0)
+		r.Position=UDim2.new((mouse.X-r.AbsolutePosition.X)/p.AbsoluteSize.X,0,(mouse.Y-r.AbsolutePosition.Y)/p.AbsoluteSize.Y,0)
 		ts:Create(r,TweenInfo.new(1),{Position=UDim2.new(-5.5,0,-5.5,0),Size=UDim2.new(12,0,12,0)}):Play()
 		wait(.25)
 		ts:Create(r,TweenInfo.new(.5),{ImageTransparency=1}):Play()
 		repeat wait() until r.ImageTransparency==1
 		r:Destroy()
-	end)
+	end)()
 end
-function ui:Tab(t)
-	self.windowCount+=1
-	local top=Instance.new("Frame",gui)
-	top.Name=rn()
-	top.BackgroundColor3=Color3.fromRGB(43,43,43)
-	top.BorderSizePixel=0
-	top.Position=UDim2.new(0,25,0,-30+36*self.windowCount+6*self.windowCount)
-	top.Size=UDim2.new(0,212,0,36)
-	Drag(top)
-	local line=Instance.new("Frame",top)
-	line.Name=rn()
-	line.BackgroundColor3=Color3.fromRGB(60,60,60)
+
+local sg=Instance.new("ScreenGui")
+sg.Name=s.HttpService:GenerateGUID()
+sg.Parent=s.RunService:IsStudio() and plr:WaitForChild("PlayerGui") or s.CoreGui
+usr.InputBegan:Connect(function(i,g)
+	if i.KeyCode==Enum.KeyCode.LeftShift and not g then
+		sg.Enabled=not sg.Enabled
+	end
+end)
+
+function ui:Tab(tit)
+	self.count=self.count+1
+	local y=Instance.new("Frame",sg)
+	y.Name="Top"
+	y.BackgroundColor3=Color3.fromRGB(43,43,43)
+	y.BorderSizePixel=0
+	y.Position=UDim2.new(0,25,0,10+(42*(self.count-1)))
+	y.Size=UDim2.new(0,212,0,36)
+	drag(y)
+	local line=Instance.new("Frame",y)
+	line.Name="WindowLine"
+	line.BackgroundColor3=Color3.fromRGB(30,30,30)
 	line.BorderSizePixel=0
 	line.Position=UDim2.new(0,0,0,34)
 	line.Size=UDim2.new(0,212,0,2)
-	local header=Instance.new("TextLabel",top)
-	header.Name=rn()
+	local header=Instance.new("TextLabel",y)
+	header.Name="Header"
 	header.BackgroundTransparency=1
 	header.Size=UDim2.new(0,54,0,34)
 	header.Font=Enum.Font.GothamSemibold
-	header.Text="   "..tostring(t or "")
+	header.Text="   "..tostring(tit or "")
 	header.TextColor3=Color3.new(1,1,1)
 	header.TextSize=14
 	header.TextXAlignment=Enum.TextXAlignment.Left
-	local toggle=Instance.new("TextButton",top)
-	toggle.Name=rn()
+	local toggle=Instance.new("TextButton",y)
+	toggle.Name="WindowToggle"
 	toggle.BackgroundTransparency=1
-	toggle.Size=UDim2.new(0,34,0,34)
 	toggle.Position=UDim2.new(0.835,0,0,0)
-	toggle.Text=""
-	local img=Instance.new("ImageLabel",toggle)
-	img.Name=rn()
-	img.AnchorPoint=Vector2.new(0.5,0.5)
-	img.BackgroundTransparency=1
-	img.Position=UDim2.new(0.5,0,0.5,0)
-	img.Size=UDim2.new(0,18,0,18)
-	img.Image="rbxassetid://3926305904"
-	img.ImageRectOffset=Vector2.new(524,764)
-	img.ImageRectSize=Vector2.new(36,36)
-	img.Rotation=180
-	local bottom=Instance.new("Frame",top)
-	bottom.Name=rn()
+	toggle.Size=UDim2.new(0,34,0,34)
+	local toggleImg=Instance.new("ImageLabel",toggle)
+	toggleImg.AnchorPoint=Vector2.new(0.5,0.5)
+	toggleImg.BackgroundTransparency=1
+	toggleImg.Position=UDim2.new(0.5,0,0.5,0)
+	toggleImg.Size=UDim2.new(0,18,0,18)
+	toggleImg.Image="rbxassetid://3926305904"
+	toggleImg.ImageRectOffset=Vector2.new(524,764)
+	toggleImg.ImageRectSize=Vector2.new(36,36)
+	toggleImg.Rotation=180
+	local bottom=Instance.new("Frame",y)
+	bottom.Name="Bottom"
 	bottom.BackgroundColor3=Color3.fromRGB(38,38,38)
 	bottom.BorderSizePixel=0
 	bottom.ClipsDescendants=true
@@ -93,143 +108,164 @@ function ui:Tab(t)
 	layout.HorizontalAlignment=Enum.HorizontalAlignment.Center
 	layout.SortOrder=Enum.SortOrder.LayoutOrder
 	layout.Padding=UDim.new(0,4)
-	local open,busy=false,false
+	local padding=Instance.new("Frame",bottom)
+	padding.BackgroundTransparency=1
+	padding.Size=UDim2.new(0,100,0,0)
+	local open=false
+	local busy=false
 	local function toggleFunc()
 		if busy then return end
 		open=not open
 		busy=true
 		ts:Create(bottom,TweenInfo.new(.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{Size=UDim2.new(0,212,0,open and layout.AbsoluteContentSize.Y+4 or 0)}):Play()
-		ts:Create(img,TweenInfo.new(.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{Rotation=open and 0 or 180}):Play()
+		ts:Create(toggleImg,TweenInfo.new(.25,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{Rotation=open and 0 or 180}):Play()
 		wait(.25)
 		busy=false
 	end
-	local function resize()
-		if not open then return end
+	local function updateSize()
+		if busy or not open then return end
 		bottom.Size=UDim2.new(0,212,0,layout.AbsoluteContentSize.Y+4)
 	end
-	layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(resize)
+	layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateSize)
 	toggle.MouseButton1Click:Connect(toggleFunc)
-	local t={}
-
-	function t:Label(txt)
-		local lbl=Instance.new("TextButton",bottom)
-		lbl.Name=rn()
-		lbl.BackgroundColor3=Color3.fromRGB(43,43,43)
-		lbl.BorderSizePixel=0
-		lbl.Size=UDim2.new(0,203,0,26)
-		lbl.AutoButtonColor=false
-		lbl.Font=Enum.Font.GothamSemibold
-		lbl.Text=tostring(txt or "")
-		lbl.TextColor3=Color3.new(1,1,1)
-		lbl.TextSize=14
-		return lbl
+	local obj={}
+	function obj:Label(txt)
+		local lb=Instance.new("TextButton",bottom)
+		lb.Name="Label"
+		lb.BackgroundColor3=Color3.fromRGB(43,43,43)
+		lb.BorderSizePixel=0
+		lb.Size=UDim2.new(0,203,0,26)
+		lb.AutoButtonColor=false
+		lb.Font=Enum.Font.GothamSemibold
+		lb.Text=tostring(txt or "")
+		lb.TextColor3=Color3.new(1,1,1)
+		lb.TextSize=14
+		return lb
 	end
-
-	function t:Button(txt,cb)
-		local f=Instance.new("Frame",bottom)
-		f.Name=rn()
-		f.BackgroundColor3=Color3.fromRGB(43,43,43)
-		f.BorderSizePixel=0
-		f.Size=UDim2.new(0,203,0,36)
-		local b=Instance.new("TextButton",f)
-		b.Name=rn()
-		b.BackgroundTransparency=1
-		b.Size=UDim2.new(1,0,1,0)
-		b.Font=Enum.Font.Gotham
-		b.Text="  "..tostring(txt or "")
-		b.TextColor3=Color3.new(1,1,1)
-		b.TextSize=14
-		b.TextXAlignment=Enum.TextXAlignment.Left
-		b.MouseEnter:Connect(function() ts:Create(f,TweenInfo.new(.25),{BackgroundColor3=Color3.fromRGB(55,55,55)}):Play() end)
-		b.MouseLeave:Connect(function() ts:Create(f,TweenInfo.new(.25),{BackgroundColor3=Color3.fromRGB(43,43,43)}):Play() end)
-		b.MouseButton1Click:Connect(function() spawn(function() ClickEffect(b) end) cb() end)
-		return b
+	function obj:Button(txt,cb)
+		local cb=cb or function()end
+		local fr=Instance.new("Frame",bottom)
+		fr.Name="ButtonObj"
+		fr.BackgroundColor3=Color3.fromRGB(43,43,43)
+		fr.BorderSizePixel=0
+		fr.Size=UDim2.new(0,203,0,36)
+		local btn=Instance.new("TextButton",fr)
+		btn.Name="Button"
+		btn.BackgroundTransparency=1
+		btn.Size=UDim2.new(1,0,1,0)
+		btn.Font=Enum.Font.Gotham
+		btn.Text="  "..tostring(txt or "")
+		btn.TextColor3=Color3.new(1,1,1)
+		btn.TextSize=14
+		btn.TextXAlignment=Enum.TextXAlignment.Left
+		btn.MouseEnter:Connect(function()
+			ts:Create(fr,TweenInfo.new(.25),{BackgroundColor3=Color3.fromRGB(55,55,55)}):Play()
+		end)
+		btn.MouseLeave:Connect(function()
+			ts:Create(fr,TweenInfo.new(.25),{BackgroundColor3=Color3.fromRGB(43,43,43)}):Play()
+		end)
+		btn.MouseButton1Click:Connect(function()
+			coroutine.wrap(function() clickEff(btn) end)()
+			cb()
+		end)
+		return btn
 	end
-
-	function t:Toggle(tit,id,state,cb,flags)
-		if type(id)=="boolean" or id==nil then id,state,cb,flags=nil,id or false,state or function()end,cb end
-		flags=flags or ui.flags
-		flags[id]=state
-		local f=Instance.new("Frame",bottom)
-		f.Name=rn()
-		f.BackgroundColor3=Color3.fromRGB(43,43,43)
-		f.BorderSizePixel=0
-		f.Size=UDim2.new(0,203,0,36)
-		local b=Instance.new("TextButton",f)
-		b.Name=rn()
-		b.BackgroundTransparency=1
-		b.Size=UDim2.new(1,0,1,0)
-		b.Font=Enum.Font.Gotham
-		b.Text="  "..tostring(tit or "")
-		b.TextColor3=Color3.new(1,1,1)
-		b.TextSize=14
-		b.TextXAlignment=Enum.TextXAlignment.Left
-		local st=Instance.new("Frame",f)
-		st.Name=rn()
-		st.AnchorPoint=Vector2.new(0,0.5)
-		st.BackgroundColor3=state and Color3.fromRGB(14,255,110) or Color3.fromRGB(255,44,44)
-		st.BorderSizePixel=0
-		st.Position=UDim2.new(0.847,0,0.5,0)
-		st.Size=UDim2.new(0,24,0,24)
-		Instance.new("UICorner",st).CornerRadius=UDim.new(0,4)
-		if state then cb(true) end
-		b.MouseEnter:Connect(function() ts:Create(f,TweenInfo.new(.25),{BackgroundColor3=Color3.fromRGB(55,55,55)}):Play() end)
-		b.MouseLeave:Connect(function() ts:Create(f,TweenInfo.new(.25),{BackgroundColor3=Color3.fromRGB(43,43,43)}):Play() end)
-		b.MouseButton1Click:Connect(function()
+	function obj:Toggle(txt,id,state,cb,flags)
+		local id=id or s.HttpService:GenerateGUID()
+		local cb=cb or function()end
+		local flags=flags or ui.flags
+		flags[id]=state or false
+		local fr=Instance.new("Frame",bottom)
+		fr.Name="ToggleObj"
+		fr.BackgroundColor3=Color3.fromRGB(43,43,43)
+		fr.BorderSizePixel=0
+		fr.Size=UDim2.new(0,203,0,36)
+		local btn=Instance.new("TextButton",fr)
+		btn.Name="ToggleText"
+		btn.BackgroundTransparency=1
+		btn.Size=UDim2.new(1,0,1,0)
+		btn.Font=Enum.Font.Gotham
+		btn.Text="  "..tostring(txt or "")
+		btn.TextColor3=Color3.new(1,1,1)
+		btn.TextSize=14
+		btn.TextXAlignment=Enum.TextXAlignment.Left
+		local status=Instance.new("Frame",fr)
+		status.Name="ToggleStatus"
+		status.AnchorPoint=Vector2.new(0,0.5)
+		status.BackgroundColor3=flags[id] and Color3.fromRGB(14,255,110) or Color3.fromRGB(255,44,44)
+		status.BorderSizePixel=0
+		status.Position=UDim2.new(0.847,0,0.5,0)
+		status.Size=UDim2.new(0,24,0,24)
+		local cr=Instance.new("UICorner",status)
+		cr.CornerRadius=UDim.new(0,4)
+		if flags[id] then cb(true) end
+		btn.MouseEnter:Connect(function()
+			ts:Create(fr,TweenInfo.new(.25),{BackgroundColor3=Color3.fromRGB(55,55,55)}):Play()
+		end)
+		btn.MouseLeave:Connect(function()
+			ts:Create(fr,TweenInfo.new(.25),{BackgroundColor3=Color3.fromRGB(43,43,43)}):Play()
+		end)
+		btn.MouseButton1Click:Connect(function()
 			flags[id]=not flags[id]
-			spawn(function() ts:Create(st,TweenInfo.new(.25),{BackgroundColor3=flags[id] and Color3.fromRGB(14,255,110) or Color3.fromRGB(255,44,44)}):Play() end)
-			spawn(function() ClickEffect(b) end)
+			coroutine.wrap(function()
+				ts:Create(status,TweenInfo.new(.25),{BackgroundColor3=flags[id] and Color3.fromRGB(14,255,110) or Color3.fromRGB(255,44,44)}):Play()
+			end)()
+			coroutine.wrap(function() clickEff(btn) end)()
 			cb(flags[id])
 		end)
-		return b
+		return btn
 	end
-
-	function t:Slider(tit,min,max,id,cb,flags)
-		if type(id)=="function" or id==nil then id,cb,flags=nil,id or function()end,cb end
+	function obj:Slider(text,min,max,id,cb,flags)
 		min=min or 0
 		max=max or 100
+		id=id or s.HttpService:GenerateGUID()
+		cb=cb or function()end
 		flags=flags or ui.flags
 		flags[id]=flags[id] or min
 		local dragging=false
-		local f=Instance.new("Frame",bottom)
-		f.Name=rn()
-		f.BackgroundColor3=Color3.fromRGB(43,43,43)
-		f.BorderSizePixel=0
-		f.Size=UDim2.new(0,203,0,36)
-		local lbl=Instance.new("TextButton",f)
-		lbl.Name=rn()
+		local fr=Instance.new("Frame",bottom)
+		fr.Name="SliderObj"
+		fr.BackgroundColor3=Color3.fromRGB(43,43,43)
+		fr.BorderSizePixel=0
+		fr.Size=UDim2.new(0,203,0,36)
+		local lbl=Instance.new("TextButton",fr)
 		lbl.BackgroundTransparency=1
 		lbl.Size=UDim2.new(1,0,1,0)
 		lbl.Font=Enum.Font.Gotham
-		lbl.Text="  "..tostring(tit or "")
+		lbl.Text="  "..tostring(text or "")
 		lbl.TextColor3=Color3.new(1,1,1)
 		lbl.TextSize=14
 		lbl.TextXAlignment=Enum.TextXAlignment.Left
-		local back=Instance.new("Frame",f)
-		back.Name=rn()
+		local back=Instance.new("Frame",fr)
 		back.BackgroundColor3=Color3.fromRGB(38,38,38)
 		back.Position=UDim2.new(0.57,0,0.68,0)
 		back.Size=UDim2.new(0,80,0,7)
 		local fill=Instance.new("Frame",back)
-		fill.Name=rn()
 		fill.BackgroundColor3=Color3.fromRGB(131,133,255)
 		fill.Size=UDim2.new((flags[id]-min)/(max-min),0,1,0)
-		local function update(i)
-			local relX=math.clamp(i.Position.X-back.AbsolutePosition.X,0,back.AbsoluteSize.X)
+		local function update(input)
+			local relX=math.clamp(input.Position.X-back.AbsolutePosition.X,0,back.AbsoluteSize.X)
 			local scale=relX/back.AbsoluteSize.X
 			fill.Size=UDim2.new(scale,0,1,0)
 			local val=math.floor(scale*(max-min)+min)
 			flags[id]=val
-			lbl.Text="  "..tit.." "..val
+			lbl.Text="  "..text.." "..val
 			cb(val)
 		end
-		lbl.InputBegan:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 then dragging=true update(i) end end)
-		lbl.InputEnded:Connect(function(i)if i.UserInputType==Enum.UserInputType.MouseButton1 then dragging=false end end)
-		usr.InputChanged:Connect(function(i)if dragging and i.UserInputType==Enum.UserInputType.MouseMovement then update(i) end end)
-		return f
+		lbl.InputBegan:Connect(function(i)
+			if i.UserInputType==Enum.UserInputType.MouseButton1 then
+				dragging=true
+				update(i)
+			end
+		end)
+		lbl.InputEnded:Connect(function(i)
+			if i.UserInputType==Enum.UserInputType.MouseButton1 then dragging=false end
+		end)
+		usr.InputChanged:Connect(function(i)
+			if dragging and i.UserInputType==Enum.UserInputType.MouseMovement then update(i) end
+		end)
+		return fr
 	end
-
-	return t
+	return obj
 end
-
 return ui
