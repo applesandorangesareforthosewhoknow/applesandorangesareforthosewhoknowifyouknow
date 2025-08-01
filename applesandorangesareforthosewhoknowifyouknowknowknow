@@ -40,9 +40,9 @@ local function dragFrame(frame, dragArea)
             local delta = dragInput.Position - dragStart
             frame.Position = UDim2.new(
                 0,
-               	math.clamp(startPos.X.Offset + delta.X, 0, workspace.CurrentCamera.ViewportSize.X - frame.AbsoluteSize.X),
+                math.clamp(startPos.X.Offset + delta.X, 0, workspace.CurrentCamera.ViewportSize.X - frame.AbsoluteSize.X),
                 0,
-               	math.clamp(startPos.Y.Offset + delta.Y, 0, workspace.CurrentCamera.ViewportSize.Y - frame.AbsoluteSize.Y)
+                math.clamp(startPos.Y.Offset + delta.Y, 0, workspace.CurrentCamera.ViewportSize.Y - frame.AbsoluteSize.Y)
             )
         end
     end)
@@ -76,7 +76,7 @@ function g.newWindow(title, index)
     toggleBtn.TextColor3=Color3.new(1,1,1)
     toggleBtn.BackgroundColor3=Color3.fromRGB(70,70,70)
     toggleBtn.Size=UDim2.new(0,40,0,40)
-    toggleBtn.Position=UDim2.new(1,-40,0,0)
+    toggleBtn.Position=UDim2.new(0, w.Size.X.Offset - 40, 0, 0)
     toggleBtn.AutoButtonColor=false
 
     local content=Instance.new("Frame",w)
@@ -108,7 +108,7 @@ function g.newWindow(title, index)
 
     toggleBtn.MouseButton1Click:Connect(toggle)
     
-    -- Also toggle on header double-click (optional)
+    -- Optional: toggle on header double-click
     local lastClick=0
     header.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
