@@ -6,64 +6,90 @@ local g = {
     text_color = Color3.fromRGB(255, 255, 255)
 }
 
-local s = Instance.new("ScreenGui", game.CoreGui)
-s.Name = "CornageUI_Lite"
+local uis = game:GetService("UserInputService")
 
-local tabholder = Instance.new("Frame", s)
-tabholder.Size = UDim2.new(0, 600, 0, 40)
-tabholder.Position = UDim2.new(0, 10, 0, 10)
-tabholder.BackgroundTransparency = 1
+local function make_draggable(frame)
+    local drag = false
+    local offset
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            drag = true
+            offset = input.Position - frame.Position
+        end
+    end)
+
+    uis.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            drag = false
+        end
+    end)
+
+    uis.InputChanged:Connect(function(input)
+        if drag and input.UserInputType == Enum.UserInputType.MouseMovement then
+            frame.Position = UDim2.new(0, input.Position.X - offset.X, 0, input.Position.Y - offset.Y)
+        end
+    end)
+end
 
 function lib:tab(name)
-    local tframe = Instance.new("Frame", s)
-    tframe.Size = UDim2.new(0, 600, 0, 0)
-    tframe.Position = UDim2.new(0, 10, 0, 60)
-    tframe.BackgroundTransparency = 1
-    tframe.Visible = false
-
-    local tab = Instance.new("Frame", tabholder)
-    tab.Size = UDim2.new(0, 150, 0, 40)
-    tab.Position = UDim2.new(0, #tabholder:GetChildren() * 155 - 155, 0, 0)
+    local tab = Instance.new("Frame", game.CoreGui)
+    tab.Size = UDim2.new(0, 200, 0, 30)
+    tab.Position = UDim2.new(0, 100, 0, 100)
     tab.BackgroundColor3 = g.tab_color
+    tab.BorderSizePixel = 0
+    tab.Active = true
+
+    make_draggable(tab)
 
     local label = Instance.new("TextLabel", tab)
-    label.Size = UDim2.new(0.8, 0, 1, 0)
+    label.Size = UDim2.new(0.8, -5, 1, 0)
     label.Position = UDim2.new(0, 5, 0, 0)
     label.Text = name
     label.TextColor3 = g.text_color
-    label.Font = Enum.Font.SourceSans
+    label.Font = Enum.Font.SourceSansBold
     label.TextSize = 18
     label.BackgroundTransparency = 1
     label.TextXAlignment = Enum.TextXAlignment.Left
 
     local toggle = Instance.new("TextButton", tab)
-    toggle.Size = UDim2.new(0.2, -5, 1, 0)
+    toggle.Size = UDim2.new(0.2, 0, 1, 0)
     toggle.Position = UDim2.new(0.8, 0, 0, 0)
     toggle.Text = "+"
     toggle.TextColor3 = g.text_color
     toggle.Font = Enum.Font.SourceSansBold
-    toggle.TextSize = 22
+    toggle.TextSize = 20
     toggle.BackgroundTransparency = 1
+
+    local container = Instance.new("Frame", tab)
+    container.Size = UDim2.new(1, 0, 0, 0)
+    container.Position = UDim2.new(0, 0, 1, 0)
+    container.BackgroundTransparency = 1
+    container.Visible = false
 
     local open = false
     toggle.MouseButton1Click:Connect(function()
         open = not open
-        tframe.Visible = open
+        container.Visible = open
         toggle.Text = open and "-" or "+"
+        tab.Size = UDim2.new(0, 200, 0, open and (#container:GetChildren() * 35 + 30) or 30)
     end)
 
     local tab_api = {}
     function tab_api:button(text, callback)
-        local btn = Instance.new("TextButton", tframe)
-        btn.Size = UDim2.new(0, 580, 0, 30)
-        btn.Position = UDim2.new(0, 10, 0, #tframe:GetChildren() * 35)
-        btn.BackgroundColor3 = g.btn_color
-        btn.Text = text
-        btn.TextColor3 = g.text_color
-        btn.Font = Enum.Font.SourceSans
-        btn.TextSize = 16
-        btn.MouseButton1Click:Connect(callback)
-        tframe.Size = UDim2.new(0, 600, 0, #tframe:GetChildren() * 35)
+        local b = Instance.new("TextButton", container)
+        b.Size = UDim2.new(1, -10, 0, 30)
+        b.Position = UDim2.new(0, 5, 0, (#container:GetChildren()) * 35)
+        b.BackgroundColor3 = g.btn_color
+        b.TextColor3 = g.text_color
+        b.Font = Enum.Font.SourceSans
+        b.TextSize = 16
+        b.Text = text
+        b.MouseButton1Click:Connect(callback)
+        container.Size = UDim2.new(1, 0, 0, (#container:GetChildren()) * 35)
+        if open then
+            tab.Size = UDim2.new(0, 200, 0, (#container:GetChildren()) * 35 + 30)
+        end
     end
 
     return tab_api
