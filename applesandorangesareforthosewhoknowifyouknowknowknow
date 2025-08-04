@@ -45,24 +45,43 @@ local function makeDraggable(frame)
 end
 
 function UILibrary:CreateDropdown(tabName, position)
-	local tab = Instance.new("TextButton")
-	tab.Size = UDim2.new(0, 150, 0, 30)
-	tab.Position = position or UDim2.new(0, 100, 0, 100)
-	tab.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	tab.TextColor3 = Color3.new(1, 1, 1)
-	tab.Font = Enum.Font.Gotham
-	tab.TextSize = 14
-	tab.Text = tabName
-	tab.BorderSizePixel = 0
-	tab.AutoButtonColor = true
-	tab.Parent = MainGui
+	local container = Instance.new("Frame")
+	container.Size = UDim2.new(0, 170, 0, 30)
+	container.Position = position or UDim2.new(0, 100, 0, 100)
+	container.BackgroundTransparency = 1
+	container.Parent = MainGui
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -30, 1, 0)
+	label.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	label.BorderSizePixel = 0
+	label.TextColor3 = Color3.new(1,1,1)
+	label.Font = Enum.Font.Gotham
+	label.TextSize = 14
+	label.Text = tabName
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = container
+
+	local arrow = Instance.new("TextButton")
+	arrow.Size = UDim2.new(0, 30, 1, 0)
+	arrow.Position = UDim2.new(1, -30, 0, 0)
+	arrow.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	arrow.BorderSizePixel = 0
+	arrow.Text = "▼"
+	arrow.TextColor3 = Color3.new(1,1,1)
+	arrow.Font = Enum.Font.Gotham
+	arrow.TextSize = 18
+	arrow.Parent = container
+	arrow.AutoButtonColor = true
+
+	makeDraggable(container)
 
 	local dropdown = Instance.new("Frame")
-	dropdown.Size = UDim2.new(0, 150, 0, 0)
+	dropdown.Size = UDim2.new(1, 0, 0, 0)
 	dropdown.Position = UDim2.new(0, 0, 1, 0)
 	dropdown.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	dropdown.ClipsDescendants = true
-	dropdown.Parent = tab
+	dropdown.Parent = container
 
 	local layout = Instance.new("UIListLayout")
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -71,13 +90,16 @@ function UILibrary:CreateDropdown(tabName, position)
 
 	local open = false
 
-	tab.MouseButton1Click:Connect(function()
-		open = not open
-		local targetSize = open and UDim2.new(0, 150, 0, layout.AbsoluteContentSize.Y + 8) or UDim2.new(0, 150, 0, 0)
-		TweenService:Create(dropdown, TweenInfo.new(0.25), {Size = targetSize}):Play()
-	end)
+	local function rotateArrow(deg)
+		TweenService:Create(arrow, TweenInfo.new(0.25), {Rotation = deg}):Play()
+	end
 
-	makeDraggable(tab)
+	arrow.MouseButton1Click:Connect(function()
+		open = not open
+		local targetSize = open and UDim2.new(1, 0, 0, layout.AbsoluteContentSize.Y + 8) or UDim2.new(1, 0, 0, 0)
+		TweenService:Create(dropdown, TweenInfo.new(0.25), {Size = targetSize}):Play()
+		rotateArrow(open and 180 or 0)
+	end)
 
 	local api = {}
 
