@@ -52,7 +52,7 @@ function UILibrary:CreateDropdown(tabName, position)
 	container.Parent = MainGui
 
 	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, -30, 1, 0) -- leave space for arrow button
+	label.Size = UDim2.new(1, 0, 1, 0) -- full container size, acts as background
 	label.Position = UDim2.new(0, 0, 0, 0)
 	label.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 	label.BorderSizePixel = 0
@@ -67,7 +67,7 @@ function UILibrary:CreateDropdown(tabName, position)
 	local arrow = Instance.new("TextButton")
 	arrow.Size = UDim2.new(0, 30, 1, 0)
 	arrow.Position = UDim2.new(1, -30, 0, 0)
-	arrow.BackgroundTransparency = 1
+	arrow.BackgroundTransparency = 1 -- fully transparent background
 	arrow.BorderSizePixel = 0
 	arrow.Text = "▼"
 	arrow.TextColor3 = Color3.new(1, 1, 1)
