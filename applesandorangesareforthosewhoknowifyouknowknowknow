@@ -10,6 +10,8 @@ MainGui.ResetOnSpawn = false
 MainGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 MainGui.Parent = CoreGui
 
+local PADDING_RIGHT = 30
+
 local function getInputPos(input)
 	if input.Position then
 		if typeof(input.Position) == "Vector3" then
@@ -64,11 +66,11 @@ function UILibrary:CreateDropdown(tabName, position)
 	label.Parent = container
 
 	local padding = Instance.new("UIPadding", label)
-	padding.PaddingRight = UDim.new(0, 30)
+	padding.PaddingRight = UDim.new(0, PADDING_RIGHT)
 
 	local arrow = Instance.new("TextButton")
-	arrow.Size = UDim2.new(0, 30, 1, 0)
-	arrow.Position = UDim2.new(1, -30, 0, 0)
+	arrow.Size = UDim2.new(0, PADDING_RIGHT, 1, 0)
+	arrow.Position = UDim2.new(1, -PADDING_RIGHT, 0, 0)
 	arrow.BackgroundTransparency = 1
 	arrow.BorderSizePixel = 0
 	arrow.Text = "▼"
@@ -81,7 +83,7 @@ function UILibrary:CreateDropdown(tabName, position)
 	makeDraggable(container)
 
 	local dropdown = Instance.new("Frame")
-	dropdown.Size = UDim2.new(0, container.AbsoluteSize.X, 0, 0)
+	dropdown.Size = UDim2.new(0, container.AbsoluteSize.X - PADDING_RIGHT, 0, 0)
 	dropdown.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	dropdown.ClipsDescendants = true
 	dropdown.Parent = MainGui -- parent to MainGui for no clipping
@@ -99,7 +101,7 @@ function UILibrary:CreateDropdown(tabName, position)
 
 	local function updateDropdownPos()
 		dropdown.Position = UDim2.new(0, container.AbsolutePosition.X, 0, container.AbsolutePosition.Y + container.AbsoluteSize.Y)
-		dropdown.Size = UDim2.new(0, container.AbsoluteSize.X, 0, dropdown.Size.Y.Offset)
+		dropdown.Size = UDim2.new(0, container.AbsoluteSize.X - PADDING_RIGHT, 0, dropdown.Size.Y.Offset)
 	end
 
 	container:GetPropertyChangedSignal("AbsolutePosition"):Connect(updateDropdownPos)
@@ -110,7 +112,7 @@ function UILibrary:CreateDropdown(tabName, position)
 	arrow.MouseButton1Click:Connect(function()
 		open = not open
 		local targetHeight = open and layout.AbsoluteContentSize.Y + 8 or 0
-		TweenService:Create(dropdown, TweenInfo.new(0.25), {Size = UDim2.new(0, container.AbsoluteSize.X, 0, targetHeight)}):Play()
+		TweenService:Create(dropdown, TweenInfo.new(0.25), {Size = UDim2.new(0, container.AbsoluteSize.X - PADDING_RIGHT, 0, targetHeight)}):Play()
 		rotateArrow(open and 180 or 0)
 	end)
 
