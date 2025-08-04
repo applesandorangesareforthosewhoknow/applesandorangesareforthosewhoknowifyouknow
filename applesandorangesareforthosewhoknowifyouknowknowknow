@@ -10,8 +10,6 @@ MainGui.ResetOnSpawn = false
 MainGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 MainGui.Parent = CoreGui
 
-local PADDING_RIGHT = 30
-
 local function getInputPos(input)
 	if input.Position then
 		if typeof(input.Position) == "Vector3" then
@@ -66,11 +64,11 @@ function UILibrary:CreateDropdown(tabName, position)
 	label.Parent = container
 
 	local padding = Instance.new("UIPadding", label)
-	padding.PaddingRight = UDim.new(0, PADDING_RIGHT)
+	padding.PaddingRight = UDim.new(0, 30)
 
 	local arrow = Instance.new("TextButton")
-	arrow.Size = UDim2.new(0, PADDING_RIGHT, 1, 0)
-	arrow.Position = UDim2.new(1, -PADDING_RIGHT, 0, 0)
+	arrow.Size = UDim2.new(0, 30, 1, 0)
+	arrow.Position = UDim2.new(1, -30, 0, 0)
 	arrow.BackgroundTransparency = 1
 	arrow.BorderSizePixel = 0
 	arrow.Text = "▼"
@@ -83,10 +81,10 @@ function UILibrary:CreateDropdown(tabName, position)
 	makeDraggable(container)
 
 	local dropdown = Instance.new("Frame")
-	dropdown.Size = UDim2.new(0, container.AbsoluteSize.X - PADDING_RIGHT, 0, 0)
+	dropdown.Size = UDim2.new(label.Size.X.Scale, 0, 0, 0) -- match label width scale only
 	dropdown.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	dropdown.ClipsDescendants = true
-	dropdown.Parent = MainGui -- parent to MainGui for no clipping
+	dropdown.Parent = MainGui
 
 	local layout = Instance.new("UIListLayout")
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -100,8 +98,8 @@ function UILibrary:CreateDropdown(tabName, position)
 	end
 
 	local function updateDropdownPos()
-		dropdown.Position = UDim2.new(0, container.AbsolutePosition.X, 0, container.AbsolutePosition.Y + container.AbsoluteSize.Y)
-		dropdown.Size = UDim2.new(0, container.AbsoluteSize.X - PADDING_RIGHT, 0, dropdown.Size.Y.Offset)
+		dropdown.Position = UDim2.new(container.Position.X.Scale, container.Position.X.Offset, container.Position.Y.Scale, container.Position.Y.Offset + container.AbsoluteSize.Y)
+		-- Width stays as label.Size.X.Scale, so no update here for width
 	end
 
 	container:GetPropertyChangedSignal("AbsolutePosition"):Connect(updateDropdownPos)
@@ -112,7 +110,7 @@ function UILibrary:CreateDropdown(tabName, position)
 	arrow.MouseButton1Click:Connect(function()
 		open = not open
 		local targetHeight = open and layout.AbsoluteContentSize.Y + 8 or 0
-		TweenService:Create(dropdown, TweenInfo.new(0.25), {Size = UDim2.new(0, container.AbsoluteSize.X - PADDING_RIGHT, 0, targetHeight)}):Play()
+		TweenService:Create(dropdown, TweenInfo.new(0.25), {Size = UDim2.new(label.Size.X.Scale, 0, 0, targetHeight)}):Play()
 		rotateArrow(open and 180 or 0)
 	end)
 
