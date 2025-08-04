@@ -1,99 +1,89 @@
+-- FloatingWindowLib.lua
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
 
--- Library table
 local UILib = {}
 
--- Settings
-local tabWidth = 40
-local tabHeight = 100
-local tabSpacing = 10
-local openSize = UDim2.new(0, 300, 0, 200)
-local tabBackgroundColor = Color3.fromRGB(30, 30, 30)
-local contentColor = Color3.fromRGB(45, 45, 45)
-local buttonColor = Color3.fromRGB(60, 60, 60)
-
--- Container
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "FloatingTabLib"
-screenGui.ResetOnSpawn = false
+screenGui.Name = "FloatingDropdownTabs"
 screenGui.IgnoreGuiInset = true
+screenGui.ResetOnSpawn = false
 screenGui.Parent = CoreGui
 
--- Tab management
-UILib.tabs = {}
-
-function UILib:CreateTab(name: string)
+function UILib:CreateTab(title: string)
 	local self = {}
 
-	local index = #UILib.tabs + 1
-	table.insert(UILib.tabs, self)
+	-- Main frame
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(0, 300, 0, 30)
+	frame.Position = UDim2.new(0, 100, 0, 100)
+	frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+	frame.BorderSizePixel = 0
+	frame.Parent = screenGui
 
-	-- Tab Button
-	local tabButton = Instance.new("TextButton")
-	tabButton.Name = name .. "_Button"
-	tabButton.Size = UDim2.new(0, tabWidth, 0, tabHeight)
-	tabButton.Position = UDim2.new(1, -tabWidth, 0, (tabHeight + tabSpacing) * (index - 1))
-	tabButton.AnchorPoint = Vector2.new(0, 0)
-	tabButton.BackgroundColor3 = buttonColor
-	tabButton.Text = "→"
-	tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	tabButton.Font = Enum.Font.SourceSansBold
-	tabButton.TextSize = 24
-	tabButton.Parent = screenGui
+	-- Title (used for dragging)
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Size = UDim2.new(1, -30, 1, 0)
+	titleLabel.Position = UDim2.new(0, 0, 0, 0)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	titleLabel.Text = title
+	titleLabel.Font = Enum.Font.SourceSansBold
+	titleLabel.TextSize = 20
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	titleLabel.PaddingLeft = UDim.new(0, 6)
+	titleLabel.Parent = frame
 
-	-- Content Frame
-	local contentFrame = Instance.new("Frame")
-	contentFrame.Name = name .. "_Content"
-	contentFrame.Size = openSize
-	contentFrame.Position = UDim2.new(1, -tabWidth, 0, (tabHeight + tabSpacing) * (index - 1))
-	contentFrame.AnchorPoint = Vector2.new(1, 0)
-	contentFrame.BackgroundColor3 = contentColor
-	contentFrame.Visible = false
-	contentFrame.Parent = screenGui
+	-- Toggle button
+	local toggleBtn = Instance.new("TextButton")
+	toggleBtn.Size = UDim2.new(0, 30, 1, 0)
+	toggleBtn.Position = UDim2.new(1, -30, 0, 0)
+	toggleBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+	toggleBtn.Text = "↓"
+	toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	toggleBtn.Font = Enum.Font.SourceSansBold
+	toggleBtn.TextSize = 20
+	toggleBtn.Parent = frame
 
-	-- Close button
-	local closeButton = Instance.new("TextButton")
-	closeButton.Size = UDim2.new(0, 30, 0, 30)
-	closeButton.Position = UDim2.new(1, -35, 0, 5)
-	closeButton.AnchorPoint = Vector2.new(1, 0)
-	closeButton.BackgroundColor3 = tabBackgroundColor
-	closeButton.Text = "X"
-	closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-	closeButton.Font = Enum.Font.SourceSans
-	closeButton.TextSize = 18
-	closeButton.Parent = contentFrame
+	-- Dropdown content
+	local content = Instance.new("Frame")
+	content.Size = UDim2.new(1, 0, 0, 150)
+	content.Position = UDim2.new(0, 0, 1, 0)
+	content.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+	content.Visible = false
+	content.Parent = frame
 
-	-- Toggle state
-	local isOpen = false
-
-	local function toggle()
-		isOpen = not isOpen
-		if isOpen then
-			contentFrame.Visible = true
-			tabButton.Text = "←"
-			local goal = { Position = UDim2.new(1, -tabWidth - openSize.X.Offset, 0, (tabHeight + tabSpacing) * (index - 1)) }
-			TweenService:Create(contentFrame, TweenInfo.new(0.25), goal):Play()
-		else
-			local goal = { Position = UDim2.new(1, -tabWidth, 0, (tabHeight + tabSpacing) * (index - 1)) }
-			local tween = TweenService:Create(contentFrame, TweenInfo.new(0.25), goal)
-			tween:Play()
-			tween.Completed:Connect(function()
-				if not isOpen then
-					contentFrame.Visible = false
-				end
-			end)
-			tabButton.Text = "→"
+	-- Dragging
+	local dragging, offset
+	titleLabel.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			offset = input.Position - frame.AbsolutePosition
 		end
-	end
+	end)
+	UIS.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+	UIS.InputChanged:Connect(function(input)
+		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+			frame.Position = UDim2.new(0, input.Position.X - offset.X, 0, input.Position.Y - offset.Y)
+		end
+	end)
 
-	tabButton.MouseButton1Click:Connect(toggle)
-	closeButton.MouseButton1Click:Connect(toggle)
+	-- Toggle logic
+	local open = false
+	toggleBtn.MouseButton1Click:Connect(function()
+		open = not open
+		content.Visible = open
+		toggleBtn.Text = open and "↑" or "↓"
+	end)
 
 	-- Public
-	self.Content = contentFrame
-	self.Toggle = toggle
+	self.Content = content
+	self.Frame = frame
 
 	return self
 end
