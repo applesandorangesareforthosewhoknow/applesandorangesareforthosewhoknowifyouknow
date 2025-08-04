@@ -1,545 +1,101 @@
-function CreateMain(title)
-	local destroyIfExist = game.CoreGui:GetChildren()
-	for _, child in pairs(destroyIfExist) do
-		if child.Name == title then
-			child:Destroy()
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+
+-- Library table
+local UILib = {}
+
+-- Settings
+local tabWidth = 40
+local tabHeight = 100
+local tabSpacing = 10
+local openSize = UDim2.new(0, 300, 0, 200)
+local tabBackgroundColor = Color3.fromRGB(30, 30, 30)
+local contentColor = Color3.fromRGB(45, 45, 45)
+local buttonColor = Color3.fromRGB(60, 60, 60)
+
+-- Container
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "FloatingTabLib"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = CoreGui
+
+-- Tab management
+UILib.tabs = {}
+
+function UILib:CreateTab(name: string)
+	local self = {}
+
+	local index = #UILib.tabs + 1
+	table.insert(UILib.tabs, self)
+
+	-- Tab Button
+	local tabButton = Instance.new("TextButton")
+	tabButton.Name = name .. "_Button"
+	tabButton.Size = UDim2.new(0, tabWidth, 0, tabHeight)
+	tabButton.Position = UDim2.new(1, -tabWidth, 0, (tabHeight + tabSpacing) * (index - 1))
+	tabButton.AnchorPoint = Vector2.new(0, 0)
+	tabButton.BackgroundColor3 = buttonColor
+	tabButton.Text = "→"
+	tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	tabButton.Font = Enum.Font.SourceSansBold
+	tabButton.TextSize = 24
+	tabButton.Parent = screenGui
+
+	-- Content Frame
+	local contentFrame = Instance.new("Frame")
+	contentFrame.Name = name .. "_Content"
+	contentFrame.Size = openSize
+	contentFrame.Position = UDim2.new(1, -tabWidth, 0, (tabHeight + tabSpacing) * (index - 1))
+	contentFrame.AnchorPoint = Vector2.new(1, 0)
+	contentFrame.BackgroundColor3 = contentColor
+	contentFrame.Visible = false
+	contentFrame.Parent = screenGui
+
+	-- Close button
+	local closeButton = Instance.new("TextButton")
+	closeButton.Size = UDim2.new(0, 30, 0, 30)
+	closeButton.Position = UDim2.new(1, -35, 0, 5)
+	closeButton.AnchorPoint = Vector2.new(1, 0)
+	closeButton.BackgroundColor3 = tabBackgroundColor
+	closeButton.Text = "X"
+	closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	closeButton.Font = Enum.Font.SourceSans
+	closeButton.TextSize = 18
+	closeButton.Parent = contentFrame
+
+	-- Toggle state
+	local isOpen = false
+
+	local function toggle()
+		isOpen = not isOpen
+		if isOpen then
+			contentFrame.Visible = true
+			tabButton.Text = "←"
+			local goal = { Position = UDim2.new(1, -tabWidth - openSize.X.Offset, 0, (tabHeight + tabSpacing) * (index - 1)) }
+			TweenService:Create(contentFrame, TweenInfo.new(0.25), goal):Play()
+		else
+			local goal = { Position = UDim2.new(1, -tabWidth, 0, (tabHeight + tabSpacing) * (index - 1)) }
+			local tween = TweenService:Create(contentFrame, TweenInfo.new(0.25), goal)
+			tween:Play()
+			tween.Completed:Connect(function()
+				if not isOpen then
+					contentFrame.Visible = false
+				end
+			end)
+			tabButton.Text = "→"
 		end
 	end
-	
-	local Rodus = Instance.new("ScreenGui")
-	local Top = Instance.new("Frame")
-	local Title = Instance.new("TextLabel")
-	local Container = Instance.new("Frame")
-	local UIListLayout = Instance.new("UIListLayout")
-	local Minimize = Instance.new("TextButton")
 
-	Rodus.Name = tostring(title)
-	Rodus.Parent = game:WaitForChild("CoreGui")
-	Rodus.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	tabButton.MouseButton1Click:Connect(toggle)
+	closeButton.MouseButton1Click:Connect(toggle)
 
-	Top.Name = "Top"
-	Top.Parent = Rodus
-	Top.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	Top.BackgroundTransparency = 0.5
-	Top.BorderColor3 = Color3.fromRGB(0, 0, 0)
-	Top.BorderSizePixel = 4
-	Top.Position = UDim2.new(0, 15, 0, 15)
-	Top.Size = UDim2.new(0, 193, 0, 27)
-	Top.Active = true
+	-- Public
+	self.Content = contentFrame
+	self.Toggle = toggle
 
-	Title.Name = "Title"
-	Title.Parent = Top
-	Title.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	Title.BackgroundTransparency = 0.35
-	Title.BorderSizePixel = 0
-	Title.Size = UDim2.new(0, 193, 0, 27)
-	Title.Font = Enum.Font.JosefinSans
-	Title.Text = " "..title
-	Title.TextColor3 = Color3.fromRGB(0, 255, 0)
-	Title.TextSize = 14
-	Title.TextXAlignment = Enum.TextXAlignment.Left
-
-	Container.Name = "Container"
-	Container.Parent = Top
-	Container.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-	Container.BackgroundTransparency = 0.5
-	Container.BorderColor3 = Color3.fromRGB(0, 0, 0)
-	Container.BorderSizePixel = 4
-	Container.Position = UDim2.new(0, 0, 1.3, 0)
-	Container.Size = UDim2.new(0, 193, 0, 24)
-
-	UIListLayout.Parent = Container
-	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-	Minimize.Name = "Minimize"
-	Minimize.Parent = Top
-	Minimize.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	Minimize.BackgroundTransparency = 1
-	Minimize.Position = UDim2.new(0.9, 0, 0.18, 0)
-	Minimize.Size = UDim2.new(0, 18, 0, 17)
-	Minimize.Font = Enum.Font.SourceSans
-	Minimize.Text = "-"
-	Minimize.TextColor3 = Color3.fromRGB(255, 255, 255)
-	Minimize.TextSize = 14
-
-	local toggled = false
-	Minimize.MouseButton1Down:Connect(function()
-		toggled = not toggled
-		Container.Visible = not toggled
-		Minimize.Text = toggled and "+" or "-"
-	end)
-
-	game:GetService("UserInputService").InputBegan:Connect(function(input)
-		if input.KeyCode == Enum.KeyCode.RightControl then
-			Top.Visible = not Top.Visible
-		end
-	end)
-
-	-- Drag implementation
-	local UserInputService = game:GetService("UserInputService")
-	local dragging = false
-	local dragStart
-	local startPos
-
-	Top.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = true
-			dragStart = input.Position
-			startPos = Top.Position
-
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
-				end
-			end)
-		end
-	end)
-
-	Top.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement then
-			if dragging then
-				local delta = input.Position - dragStart
-				Top.Position = UDim2.new(
-					startPos.X.Scale,
-					startPos.X.Offset + delta.X,
-					startPos.Y.Scale,
-					startPos.Y.Offset + delta.Y
-				)
-			end
-		end
-	end)
-
-	function CreateTab(text)
-		local Tab = Instance.new("TextButton")
-		local Arrow = Instance.new("TextLabel")
-		Tab.Name = text
-		Tab.Parent = Container
-		Tab.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		Tab.BackgroundTransparency = 1
-		Tab.Size = UDim2.new(0, 193, 0, 24)
-		Tab.Font = Enum.Font.JosefinSans
-		Tab.Text = " "..text
-		Tab.TextColor3 = Color3.fromRGB(255, 255, 255)
-		Tab.TextSize = 14
-		Tab.TextXAlignment = Enum.TextXAlignment.Left
-
-		Arrow.Name = "Arrow"
-		Arrow.Parent = Tab
-		Arrow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		Arrow.BackgroundTransparency = 1
-		Arrow.Position = UDim2.new(0.907, 0, 0, 0)
-		Arrow.Size = UDim2.new(0, 18, 0, 21)
-		Arrow.Font = Enum.Font.SourceSans
-		Arrow.Text = ">>"
-		Arrow.TextColor3 = Color3.fromRGB(255, 255, 255)
-		Arrow.TextScaled = true
-		Arrow.TextSize = 14
-		Arrow.TextWrapped = true
-
-		Container.Size = UDim2.new(0, UIListLayout.AbsoluteContentSize.X, 0, UIListLayout.AbsoluteContentSize.Y)
-
-		local TabContainer = Instance.new("Frame")
-		TabContainer.Name = "TabContainer"
-		TabContainer.Parent = Tab
-		TabContainer.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		TabContainer.BackgroundTransparency = 0.5
-		TabContainer.BorderColor3 = Color3.fromRGB(0, 0, 0)
-		TabContainer.BorderSizePixel = 4
-		TabContainer.Position = UDim2.new(1.05, 0, 0, 0)
-		TabContainer.Visible = false
-
-		Tab.MouseButton1Down:Connect(function()
-			if TabContainer.Visible == false then
-				for _, v in pairs(Container:GetChildren()) do
-					if v.Name == "TabContainer" then
-						v.Visible = false
-						v.Parent.TextColor3 = Color3.new(1, 1, 1)
-						v.Parent.Arrow.TextColor3 = Color3.new(1, 1, 1)
-					end
-				end
-				TabContainer.Visible = true
-				Tab.TextColor3 = Color3.new(0, 1, 0)
-				Tab.Arrow.TextColor3 = Color3.new(0, 1, 0)
-			else
-				TabContainer.Visible = false
-				Tab.TextColor3 = Color3.new(1, 1, 1)
-				Tab.Arrow.TextColor3 = Color3.new(1, 1, 1)
-			end
-		end)
-
-		local UIListLayout2 = Instance.new("UIListLayout")
-		UIListLayout2.Parent = TabContainer
-		UIListLayout2.SortOrder = Enum.SortOrder.LayoutOrder
-
-		function CreateButton(parent, buttonText, note, callback)
-			local Button = Instance.new("TextButton")
-			local Note = Instance.new("TextLabel")
-
-			Button.Name = buttonText
-			Button.Parent = parent
-			Button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-			Button.BackgroundTransparency = 1
-			Button.Size = UDim2.new(0, 193, 0, 24)
-			Button.Font = Enum.Font.JosefinSans
-			Button.Text = " "..buttonText
-			Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-			Button.TextSize = 14
-			Button.TextXAlignment = Enum.TextXAlignment.Left
-			Button.MouseEnter:Connect(function()
-				Note.Visible = true
-			end)
-			Button.MouseLeave:Connect(function()
-				Note.Visible = false
-			end)
-			Button.MouseButton1Down:Connect(function()
-				Button.TextColor3 = Color3.new(0, 1, 0)
-				wait(0.05)
-				Button.TextColor3 = Color3.new(1, 1, 1)
-				pcall(callback)
-			end)
-
-			Note.Name = "Note"
-			Note.Parent = Button
-			Note.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			Note.BackgroundTransparency = 1
-			Note.Position = UDim2.new(1.04, 0, 0, 0)
-			Note.Size = UDim2.new(0, 193, 0, 24)
-			Note.Font = Enum.Font.JosefinSans
-			Note.Text = note
-			Note.TextColor3 = Color3.fromRGB(0, 1, 0)
-			Note.TextSize = 14
-			Note.TextXAlignment = Enum.TextXAlignment.Left
-			Note.Visible = false
-
-			parent.Size = UDim2.new(0, UIListLayout2.AbsoluteContentSize.X, 0, UIListLayout2.AbsoluteContentSize.Y)
-		end
-
-		function CreateLabel(parent, labelText, color3)
-			local Label = Instance.new("TextLabel")
-
-			Label.Name = labelText
-			Label.Parent = parent
-			Label.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-			Label.BackgroundTransparency = 1
-			Label.Size = UDim2.new(0, 193, 0, 24)
-			Label.Font = Enum.Font.JosefinSans
-			Label.Text = " "..labelText
-			Label.TextColor3 = color3
-			Label.TextSize = 14
-			Label.TextXAlignment = Enum.TextXAlignment.Left
-
-			parent.Size = UDim2.new(0, UIListLayout2.AbsoluteContentSize.X, 0, UIListLayout2.AbsoluteContentSize.Y)
-		end
-
-		function CreateToggle(parent, buttonText, note, callback)
-			local Button = Instance.new("TextButton")
-			local Note = Instance.new("TextLabel")
-			local Toggle = Instance.new("BoolValue")
-
-			Button.Name = buttonText
-			Button.Parent = parent
-			Toggle.Parent = Button
-			Toggle.Name = "Toggled"
-			Toggle.Value = false
-			Button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-			Button.BackgroundTransparency = 1
-			Button.Size = UDim2.new(0, 193, 0, 24)
-			Button.Font = Enum.Font.JosefinSans
-			Button.Text = " "..buttonText
-			Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-			Button.TextSize = 14
-			Button.TextXAlignment = Enum.TextXAlignment.Left
-			Button.MouseEnter:Connect(function()
-				Note.Visible = true
-			end)
-			Button.MouseLeave:Connect(function()
-				Note.Visible = false
-			end)
-			Button.MouseButton1Down:Connect(function()
-				Toggle.Value = not Toggle.Value
-				if Toggle.Value then
-					Button.TextColor3 = Color3.new(0, 1, 0)
-				else
-					Button.TextColor3 = Color3.new(1, 1, 1)
-				end
-				pcall(callback)
-			end)
-
-			Note.Name = "Note"
-			Note.Parent = Button
-			Note.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			Note.BackgroundTransparency = 1
-			Note.Position = UDim2.new(1.04, 0, 0, 0)
-			Note.Size = UDim2.new(0, 193, 0, 24)
-			Note.Font = Enum.Font.JosefinSans
-			Note.Text = note
-			Note.TextColor3 = Color3.fromRGB(0, 1, 0)
-			Note.TextSize = 14
-			Note.TextXAlignment = Enum.TextXAlignment.Left
-			Note.Visible = false
-
-			parent.Size = UDim2.new(0, UIListLayout2.AbsoluteContentSize.X, 0, UIListLayout2.AbsoluteContentSize.Y)
-		end
-
-		function CreateSideDropButton(parent, dropText, list, callback)
-			local SideDrop = Instance.new("TextButton")
-			local Arrow = Instance.new("TextButton")
-			local DropContainer = Instance.new("Frame")
-			local UIListLayout = Instance.new("UIListLayout")
-
-			SideDrop.Name = dropText
-			SideDrop.Parent = parent
-			SideDrop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-			SideDrop.BackgroundTransparency = 1
-			SideDrop.Size = UDim2.new(0, 193, 0, 24)
-			SideDrop.Font = Enum.Font.JosefinSans
-			SideDrop.Text = " "..dropText
-			SideDrop.TextColor3 = Color3.fromRGB(255, 255, 255)
-			SideDrop.TextSize = 14
-			SideDrop.TextXAlignment = Enum.TextXAlignment.Left
-			SideDrop.MouseButton1Down:Connect(function()
-				if SideDrop.TextColor3 == Color3.new(0, 1, 0) then
-					SideDrop.TextColor3 = Color3.new(1, 1, 1)
-					SideDrop.Arrow.TextColor3 = Color3.new(1, 1, 1)
-					DropContainer.Visible = false
-				else
-					for _, v in pairs(Container:GetDescendants()) do
-						if v.Name == "DropContainer" then
-							v.Visible = false
-							v.Parent.TextColor3 = Color3.new(1, 1, 1)
-							v.Parent.Arrow.TextColor3 = Color3.new(1, 1, 1)
-						end
-					end
-					SideDrop.TextColor3 = Color3.new(0, 1, 0)
-					SideDrop.Arrow.TextColor3 = Color3.new(0, 1, 0)
-					DropContainer.Visible = true
-				end
-			end)
-
-			Arrow.Name = "Arrow"
-			Arrow.Parent = SideDrop
-			Arrow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			Arrow.BackgroundTransparency = 1
-			Arrow.Position = UDim2.new(0.9, 0, 0, 0)
-			Arrow.Size = UDim2.new(0, 18, 0, 21)
-			Arrow.Font = Enum.Font.SourceSans
-			Arrow.Text = ">>"
-			Arrow.TextColor3 = Color3.fromRGB(255, 255, 255)
-			Arrow.TextScaled = true
-			Arrow.TextSize = 14
-			Arrow.TextWrapped = true
-
-			DropContainer.Name = "DropContainer"
-			DropContainer.Parent = SideDrop
-			DropContainer.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-			DropContainer.BackgroundTransparency = 0.5
-			DropContainer.BorderColor3 = Color3.fromRGB(0, 0, 0)
-			DropContainer.BorderSizePixel = 4
-			DropContainer.Position = UDim2.new(1.05, 0, 0, 0)
-			DropContainer.Size = UDim2.new(0, 193, 0, 72)
-			DropContainer.Visible = false
-
-			UIListLayout.Parent = DropContainer
-			UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-			for _, v in ipairs(list) do
-				local Button = Instance.new("TextButton")
-				Button.Name = v
-				Button.Parent = DropContainer
-				Button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-				Button.BackgroundTransparency = 1
-				Button.Size = UDim2.new(0, 193, 0, 24)
-				Button.Font = Enum.Font.JosefinSans
-				Button.Text = " "..v
-				Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-				Button.TextSize = 14
-				Button.TextXAlignment = Enum.TextXAlignment.Left
-				Button.MouseButton1Down:Connect(function()
-					Button.TextColor3 = Color3.new(0, 1, 0)
-					wait(0.05)
-					Button.TextColor3 = Color3.new(1, 1, 1)
-					callback(v)
-				end)
-				DropContainer.Size = UDim2.new(0, UIListLayout.AbsoluteContentSize.X, 0, UIListLayout.AbsoluteContentSize.Y)
-				parent.Size = UDim2.new(0, UIListLayout2.AbsoluteContentSize.X, 0, UIListLayout2.AbsoluteContentSize.Y)
-			end
-		end
-
-		function CreateSideDropToggle(parent, dropText, list, callback)
-			local SideDrop = Instance.new("TextButton")
-			local Arrow = Instance.new("TextButton")
-			local DropContainer = Instance.new("Frame")
-			local UIListLayout = Instance.new("UIListLayout")
-
-			SideDrop.Name = dropText
-			SideDrop.Parent = parent
-			SideDrop.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-			SideDrop.BackgroundTransparency = 1
-			SideDrop.Size = UDim2.new(0, 193, 0, 24)
-			SideDrop.Font = Enum.Font.JosefinSans
-			SideDrop.Text = " "..dropText
-			SideDrop.TextColor3 = Color3.fromRGB(255, 255, 255)
-			SideDrop.TextSize = 14
-			SideDrop.TextXAlignment = Enum.TextXAlignment.Left
-			SideDrop.MouseButton1Down:Connect(function()
-				if SideDrop.TextColor3 == Color3.new(0, 1, 0) then
-					SideDrop.TextColor3 = Color3.new(1, 1, 1)
-					SideDrop.Arrow.TextColor3 = Color3.new(1, 1, 1)
-					DropContainer.Visible = false
-				else
-					for _, v in pairs(Container:GetDescendants()) do
-						if v.Name == "DropContainer" then
-							v.Visible = false
-							v.Parent.TextColor3 = Color3.new(1, 1, 1)
-							v.Parent.Arrow.TextColor3 = Color3.new(1, 1, 1)
-						end
-					end
-					SideDrop.TextColor3 = Color3.new(0, 1, 0)
-					SideDrop.Arrow.TextColor3 = Color3.new(0, 1, 0)
-					DropContainer.Visible = true
-				end
-			end)
-
-			Arrow.Name = "Arrow"
-			Arrow.Parent = SideDrop
-			Arrow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			Arrow.BackgroundTransparency = 1
-			Arrow.Position = UDim2.new(0.9, 0, 0, 0)
-			Arrow.Size = UDim2.new(0, 18, 0, 21)
-			Arrow.Font = Enum.Font.SourceSans
-			Arrow.Text = ">>"
-			Arrow.TextColor3 = Color3.fromRGB(255, 255, 255)
-			Arrow.TextScaled = true
-			Arrow.TextSize = 14
-			Arrow.TextWrapped = true
-
-			DropContainer.Name = "DropContainer"
-			DropContainer.Parent = SideDrop
-			DropContainer.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-			DropContainer.BackgroundTransparency = 0.5
-			DropContainer.BorderColor3 = Color3.fromRGB(0, 0, 0)
-			DropContainer.BorderSizePixel = 4
-			DropContainer.Position = UDim2.new(1.05, 0, 0, 0)
-			DropContainer.Size = UDim2.new(0, 193, 0, 72)
-			DropContainer.Visible = false
-
-			UIListLayout.Parent = DropContainer
-			UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-			for _, v in ipairs(list) do
-				local Button = Instance.new("TextButton")
-				local Toggle = Instance.new("BoolValue")
-
-				Toggle.Parent = Button
-				Toggle.Name = "Toggled"
-				Toggle.Value = false
-
-				Button.Name = v
-				Button.Parent = DropContainer
-				Button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-				Button.BackgroundTransparency = 1
-				Button.Size = UDim2.new(0, 193, 0, 24)
-				Button.Font = Enum.Font.JosefinSans
-				Button.Text = " "..v
-				Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-				Button.TextSize = 14
-				Button.TextXAlignment = Enum.TextXAlignment.Left
-
-				Button.MouseButton1Down:Connect(function()
-					Toggle.Value = not Toggle.Value
-					if Toggle.Value then
-						Button.TextColor3 = Color3.new(0, 1, 0)
-					else
-						Button.TextColor3 = Color3.new(1, 1, 1)
-					end
-					callback(v)
-				end)
-
-				DropContainer.Size = UDim2.new(0, UIListLayout.AbsoluteContentSize.X, 0, UIListLayout.AbsoluteContentSize.Y)
-				parent.Size = UDim2.new(0, UIListLayout2.AbsoluteContentSize.X, 0, UIListLayout2.AbsoluteContentSize.Y)
-			end
-		end
-
-		function CreateSlider(parent, text, min, max, default, callback)
-			local Slider = Instance.new("TextButton")
-			local SlideBar = Instance.new("Frame")
-			local SlideButton = Instance.new("TextButton")
-			local Text = Instance.new("TextLabel")
-
-			Slider.Name = text
-			Slider.Parent = parent
-			Slider.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-			Slider.BackgroundTransparency = 1
-			Slider.Size = UDim2.new(0, 193, 0, 24)
-			Slider.Font = Enum.Font.JosefinSans
-			Slider.Text = ""
-			Slider.TextColor3 = Color3.fromRGB(255, 255, 255)
-			Slider.TextSize = 14
-			Slider.TextXAlignment = Enum.TextXAlignment.Left
-
-			SlideBar.Name = "SlideBar"
-			SlideBar.Parent = Slider
-			SlideBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-			SlideBar.BackgroundTransparency = 0.5
-			SlideBar.BorderSizePixel = 0
-			SlideBar.Position = UDim2.new(0, 5, 0, 16)
-			SlideBar.Size = UDim2.new(0, 182, 0, 4)
-
-			SlideButton.Name = "SlideButton"
-			SlideButton.Parent = SlideBar
-			SlideButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-			SlideButton.BorderSizePixel = 0
-			SlideButton.Size = UDim2.new(0, 10, 0, 10)
-			SlideButton.Position = UDim2.new(((default - min) / (max - min)), 0, 0, -3)
-			SlideButton.AutoButtonColor = false
-			SlideButton.Text = ""
-
-			Text.Name = "Text"
-			Text.Parent = Slider
-			Text.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-			Text.BackgroundTransparency = 1
-			Text.Position = UDim2.new(0, 5, 0, 0)
-			Text.Size = UDim2.new(0, 193, 0, 16)
-			Text.Font = Enum.Font.JosefinSans
-			Text.Text = text.." "..default
-			Text.TextColor3 = Color3.fromRGB(255, 255, 255)
-			Text.TextSize = 14
-			Text.TextXAlignment = Enum.TextXAlignment.Left
-
-			local dragging = false
-			SlideButton.MouseButton1Down:Connect(function()
-				dragging = true
-			end)
-			UserInputService.InputEnded:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 then
-					dragging = false
-				end
-			end)
-			UserInputService.InputChanged:Connect(function(input)
-				if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-					local relativeX = math.clamp(input.Position.X - SlideBar.AbsolutePosition.X, 0, SlideBar.AbsoluteSize.X)
-					SlideButton.Position = UDim2.new(0, relativeX, 0, -3)
-					local value = math.floor(min + (relativeX / SlideBar.AbsoluteSize.X) * (max - min))
-					Text.Text = text.." "..value
-					pcall(function() callback(value) end)
-				end
-			end)
-
-			parent.Size = UDim2.new(0, UIListLayout2.AbsoluteContentSize.X, 0, UIListLayout2.AbsoluteContentSize.Y)
-		end
-
-		return {
-			CreateButton = CreateButton,
-			CreateLabel = CreateLabel,
-			CreateToggle = CreateToggle,
-			CreateSideDropButton = CreateSideDropButton,
-			CreateSideDropToggle = CreateSideDropToggle,
-			CreateSlider = CreateSlider
-		}
-	end
-
-	return {
-		ScreenGui = Rodus,
-		CreateTab = CreateTab
-	}
+	return self
 end
+
+return UILib
