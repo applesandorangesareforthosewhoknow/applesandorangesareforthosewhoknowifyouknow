@@ -1,4 +1,3 @@
---// UI LIBRARY
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
@@ -6,9 +5,9 @@ local CoreGui = game:GetService("CoreGui")
 local UILibrary = {}
 
 local MainGui = Instance.new("ScreenGui")
-MainGui.Name = "CustomUILibrary"
-MainGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+MainGui.Name = "FloatingDropdownUI"
 MainGui.ResetOnSpawn = false
+MainGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 MainGui.Parent = CoreGui
 
 local function makeDraggable(frame)
@@ -31,45 +30,44 @@ local function makeDraggable(frame)
 	end)
 end
 
-function UILibrary:CreateDropdown(tabName)
-	local tabButton = Instance.new("TextButton")
-	tabButton.Size = UDim2.new(0, 120, 0, 30)
-	tabButton.Position = UDim2.new(0, 100, 0, 100)
-	tabButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	tabButton.TextColor3 = Color3.new(1, 1, 1)
-	tabButton.Font = Enum.Font.Gotham
-	tabButton.TextSize = 14
-	tabButton.Text = tabName
-	tabButton.AutoButtonColor = true
-	tabButton.Parent = MainGui
+function UILibrary:CreateDropdown(tabName, position)
+	local tab = Instance.new("TextButton")
+	tab.Size = UDim2.new(0, 150, 0, 30)
+	tab.Position = position or UDim2.new(0, 100, 0, 100)
+	tab.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	tab.TextColor3 = Color3.new(1, 1, 1)
+	tab.Font = Enum.Font.Gotham
+	tab.TextSize = 14
+	tab.Text = tabName
+	tab.BorderSizePixel = 0
+	tab.AutoButtonColor = true
+	tab.Parent = MainGui
 
-	local content = Instance.new("Frame")
-	content.Size = UDim2.new(0, 120, 0, 0)
-	content.Position = UDim2.new(0, 100, 0, 130)
-	content.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-	content.ClipsDescendants = true
-	content.BorderSizePixel = 0
-	content.Visible = true
-	content.Parent = MainGui
+	local dropdown = Instance.new("Frame")
+	dropdown.Size = UDim2.new(0, 150, 0, 0)
+	dropdown.Position = UDim2.new(0, 0, 1, 0)
+	dropdown.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+	dropdown.ClipsDescendants = true
+	dropdown.Parent = tab
 
 	local layout = Instance.new("UIListLayout")
-	layout.Padding = UDim.new(0, 4)
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Parent = content
+	layout.Padding = UDim.new(0, 4)
+	layout.Parent = dropdown
 
 	local open = false
 
-	tabButton.MouseButton1Click:Connect(function()
+	tab.MouseButton1Click:Connect(function()
 		open = not open
-		local goalSize = open and UDim2.new(0, 120, 0, layout.AbsoluteContentSize.Y + 8) or UDim2.new(0, 120, 0, 0)
-		TweenService:Create(content, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Size = goalSize}):Play()
+		local targetSize = open and UDim2.new(0, 150, 0, layout.AbsoluteContentSize.Y + 8) or UDim2.new(0, 150, 0, 0)
+		TweenService:Create(dropdown, TweenInfo.new(0.25), {Size = targetSize}):Play()
 	end)
 
-	makeDraggable(tabButton)
+	makeDraggable(tab)
 
-	local tabFunctions = {}
+	local api = {}
 
-	function tabFunctions:AddButton(text, callback)
+	function api:AddButton(text, callback)
 		local button = Instance.new("TextButton")
 		button.Size = UDim2.new(1, 0, 0, 24)
 		button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
@@ -77,19 +75,21 @@ function UILibrary:CreateDropdown(tabName)
 		button.Font = Enum.Font.Gotham
 		button.TextSize = 12
 		button.Text = text
-		button.Parent = content
+		button.BorderSizePixel = 0
+		button.Parent = dropdown
 		button.MouseButton1Click:Connect(callback)
 	end
 
-	function tabFunctions:AddToggle(text, default, callback)
+	function api:AddToggle(text, default, callback)
 		local toggle = Instance.new("TextButton")
 		toggle.Size = UDim2.new(1, 0, 0, 24)
 		toggle.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 		toggle.TextColor3 = Color3.new(1, 1, 1)
 		toggle.Font = Enum.Font.Gotham
 		toggle.TextSize = 12
+		toggle.BorderSizePixel = 0
 		toggle.Text = text .. (default and " [ON]" or " [OFF]")
-		toggle.Parent = content
+		toggle.Parent = dropdown
 		local state = default
 		toggle.MouseButton1Click:Connect(function()
 			state = not state
@@ -98,11 +98,12 @@ function UILibrary:CreateDropdown(tabName)
 		end)
 	end
 
-	function tabFunctions:AddSlider(text, min, max, default, callback)
+	function api:AddSlider(text, min, max, default, callback)
 		local frame = Instance.new("Frame")
 		frame.Size = UDim2.new(1, 0, 0, 24)
 		frame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-		frame.Parent = content
+		frame.BorderSizePixel = 0
+		frame.Parent = dropdown
 
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(1, 0, 1, 0)
@@ -110,8 +111,8 @@ function UILibrary:CreateDropdown(tabName)
 		label.TextColor3 = Color3.new(1, 1, 1)
 		label.Font = Enum.Font.Gotham
 		label.TextSize = 12
-		label.Text = text .. ": " .. default
 		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.Text = text .. ": " .. default
 		label.Parent = frame
 
 		local sliderValue = default
@@ -138,7 +139,7 @@ function UILibrary:CreateDropdown(tabName)
 		end)
 	end
 
-	return tabFunctions
+	return api
 end
 
 return UILibrary
