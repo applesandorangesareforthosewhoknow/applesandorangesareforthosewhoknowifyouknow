@@ -52,7 +52,7 @@ function UILibrary:CreateDropdown(tabName, position)
 	container.Parent = MainGui
 
 	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, -30, 1, 0)
+	label.Size = UDim2.new(1, -30, 1, 0) -- full width minus arrow
 	label.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 	label.BorderSizePixel = 0
 	label.TextColor3 = Color3.new(1,1,1)
@@ -65,7 +65,7 @@ function UILibrary:CreateDropdown(tabName, position)
 	local arrow = Instance.new("TextButton")
 	arrow.Size = UDim2.new(0, 30, 1, 0)
 	arrow.Position = UDim2.new(1, -30, 0, 0)
-	arrow.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	arrow.BackgroundTransparency = 1
 	arrow.BorderSizePixel = 0
 	arrow.Text = "▼"
 	arrow.TextColor3 = Color3.new(1,1,1)
@@ -96,7 +96,7 @@ function UILibrary:CreateDropdown(tabName, position)
 
 	arrow.MouseButton1Click:Connect(function()
 		open = not open
-		local targetSize = open and UDim2.new(1, 0, 0, layout.AbsoluteContentSize.Y + 8) or UDim2.new(1, 0, 0, 0)
+		local targetSize = open and UDim2.new(0, label.AbsoluteSize.X + arrow.AbsoluteSize.X, 0, layout.AbsoluteContentSize.Y + 8) or UDim2.new(0, label.AbsoluteSize.X + arrow.AbsoluteSize.X, 0, 0)
 		TweenService:Create(dropdown, TweenInfo.new(0.25), {Size = targetSize}):Play()
 		rotateArrow(open and 180 or 0)
 	end)
