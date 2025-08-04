@@ -52,7 +52,7 @@ function UILibrary:CreateDropdown(tabName, position)
 	container.Parent = MainGui
 
 	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, 0, 1, 0)  -- full width of container
+	label.Size = UDim2.new(1, 0, 1, 0)
 	label.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 	label.BorderSizePixel = 0
 	label.TextColor3 = Color3.new(1, 1, 1)
@@ -80,13 +80,11 @@ function UILibrary:CreateDropdown(tabName, position)
 
 	makeDraggable(container)
 
-	-- Dropdown is parented directly to MainGui, not container
 	local dropdown = Instance.new("Frame")
 	dropdown.Size = UDim2.new(0, container.AbsoluteSize.X, 0, 0)
-	dropdown.Position = UDim2.new(0, container.AbsolutePosition.X, 0, container.AbsolutePosition.Y + container.AbsoluteSize.Y)
 	dropdown.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	dropdown.ClipsDescendants = true
-	dropdown.Parent = MainGui
+	dropdown.Parent = MainGui -- parent to MainGui for no clipping
 
 	local layout = Instance.new("UIListLayout")
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -99,14 +97,15 @@ function UILibrary:CreateDropdown(tabName, position)
 		TweenService:Create(arrow, TweenInfo.new(0.25), {Rotation = deg}):Play()
 	end
 
-	-- Keep dropdown position and width synced when container moves or resizes
 	local function updateDropdownPos()
 		dropdown.Position = UDim2.new(0, container.AbsolutePosition.X, 0, container.AbsolutePosition.Y + container.AbsoluteSize.Y)
-		dropdown.Size = UDim2.new(0, container.AbsoluteSize.X, dropdown.Size.Y.Scale, dropdown.Size.Y.Offset)
+		dropdown.Size = UDim2.new(0, container.AbsoluteSize.X, 0, dropdown.Size.Y.Offset)
 	end
 
 	container:GetPropertyChangedSignal("AbsolutePosition"):Connect(updateDropdownPos)
 	container:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateDropdownPos)
+
+	updateDropdownPos()
 
 	arrow.MouseButton1Click:Connect(function()
 		open = not open
