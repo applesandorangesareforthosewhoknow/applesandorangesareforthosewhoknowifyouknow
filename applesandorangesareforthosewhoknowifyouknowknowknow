@@ -52,7 +52,7 @@ function UILibrary:CreateDropdown(tabName, position)
 	container.Parent = MainGui
 
 	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(0, 170, 1, 0)
+	label.Size = UDim2.new(1, 0, 1, 0)
 	label.Position = UDim2.new(0, 0, 0, 0)
 	label.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 	label.BorderSizePixel = 0
@@ -79,21 +79,18 @@ function UILibrary:CreateDropdown(tabName, position)
 	makeDraggable(container)
 
 	local dropdown = Instance.new("Frame")
-	dropdown.Size = UDim2.new(0, container.AbsoluteSize.X, 0, 0)
+	dropdown.Size = UDim2.new(1, 0, 0, 0)
+	dropdown.Position = UDim2.new(0, container.AbsolutePosition.X, 0, container.AbsolutePosition.Y + container.AbsoluteSize.Y)
 	dropdown.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	dropdown.ClipsDescendants = true
 	dropdown.Parent = MainGui
 
 	local layout = Instance.new("UIListLayout")
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Padding = UDim.new(0, 0)
 	layout.Parent = dropdown
 
-	local open = false
-
-	local function rotateArrow(deg)
-		TweenService:Create(arrow, TweenInfo.new(0.25), {Rotation = deg}):Play()
-	end
-
+	-- Ensure dropdown always matches container width
 	local function updateDropdownPos()
 		dropdown.Position = UDim2.new(0, container.AbsolutePosition.X, 0, container.AbsolutePosition.Y + container.AbsoluteSize.Y)
 		dropdown.Size = UDim2.new(0, container.AbsoluteSize.X, 0, dropdown.Size.Y.Offset)
@@ -101,7 +98,14 @@ function UILibrary:CreateDropdown(tabName, position)
 
 	container:GetPropertyChangedSignal("AbsolutePosition"):Connect(updateDropdownPos)
 	container:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateDropdownPos)
+
 	updateDropdownPos()
+
+	local open = false
+
+	local function rotateArrow(deg)
+		TweenService:Create(arrow, TweenInfo.new(0.25), {Rotation = deg}):Play()
+	end
 
 	arrow.MouseButton1Click:Connect(function()
 		open = not open
