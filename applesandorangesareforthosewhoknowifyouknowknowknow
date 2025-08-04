@@ -52,15 +52,19 @@ function UILibrary:CreateDropdown(tabName, position)
 	container.Parent = MainGui
 
 	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, -30, 1, 0) -- full width minus arrow
+	label.Size = UDim2.new(1, 0, 1, 0)  -- full width of container
 	label.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 	label.BorderSizePixel = 0
-	label.TextColor3 = Color3.new(1,1,1)
+	label.TextColor3 = Color3.new(1, 1, 1)
 	label.Font = Enum.Font.Gotham
 	label.TextSize = 14
 	label.Text = tabName
 	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.RichText = true
 	label.Parent = container
+
+	local padding = Instance.new("UIPadding", label)
+	padding.PaddingRight = UDim.new(0, 30)
 
 	local arrow = Instance.new("TextButton")
 	arrow.Size = UDim2.new(0, 30, 1, 0)
@@ -68,7 +72,7 @@ function UILibrary:CreateDropdown(tabName, position)
 	arrow.BackgroundTransparency = 1
 	arrow.BorderSizePixel = 0
 	arrow.Text = "▼"
-	arrow.TextColor3 = Color3.new(1,1,1)
+	arrow.TextColor3 = Color3.new(1, 1, 1)
 	arrow.Font = Enum.Font.Gotham
 	arrow.TextSize = 18
 	arrow.Parent = container
