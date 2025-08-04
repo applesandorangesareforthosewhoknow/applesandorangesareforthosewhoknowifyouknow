@@ -1,133 +1,144 @@
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local UIS = game:GetService("UserInputService")
+--// UI LIBRARY
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
 
--- Create ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "CleanTabUI"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = player:WaitForChild("PlayerGui")
+local UILibrary = {}
 
--- Main UI container
-local mainFrame = Instance.new("Frame")
-mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 600, 0, 400)
-mainFrame.Position = UDim2.new(0, 100, 0, 100)
-mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-mainFrame.BorderSizePixel = 0
-mainFrame.Active = true
-mainFrame.Draggable = true
-mainFrame.Parent = screenGui
+local MainGui = Instance.new("ScreenGui")
+MainGui.Name = "CustomUILibrary"
+MainGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+MainGui.ResetOnSpawn = false
+MainGui.Parent = CoreGui
 
--- Tab container (top area)
-local tabContainer = Instance.new("Frame")
-tabContainer.Name = "TabContainer"
-tabContainer.Size = UDim2.new(1, 0, 0, 60)
-tabContainer.Position = UDim2.new(0, 0, 0, 0)
-tabContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-tabContainer.BorderSizePixel = 0
-tabContainer.Parent = mainFrame
-
--- Tab layout (horizontal wrap)
-local tabLayout = Instance.new("UIGridLayout")
-tabLayout.CellSize = UDim2.new(0, 120, 0, 30)
-tabLayout.CellPadding = UDim2.new(0, 6, 0, 6)
-tabLayout.FillDirection = Enum.FillDirection.Horizontal
-tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-tabLayout.VerticalAlignment = Enum.VerticalAlignment.Top
-tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
-tabLayout.Parent = tabContainer
-
--- Content container (bottom area)
-local contentFrame = Instance.new("Frame")
-contentFrame.Name = "ContentFrame"
-contentFrame.Position = UDim2.new(0, 0, 0, 60)
-contentFrame.Size = UDim2.new(1, 0, 1, -60)
-contentFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-contentFrame.BorderSizePixel = 0
-contentFrame.Parent = mainFrame
-
--- Tab management
-local tabs = {}
-
-local function switchTab(tabName)
-	for name, info in pairs(tabs) do
-		info.content.Visible = (name == tabName)
-		info.button.BackgroundColor3 = name == tabName and Color3.fromRGB(60, 60, 60) or Color3.fromRGB(35, 35, 35)
-	end
+local function makeDraggable(frame)
+	local dragging, offset
+	frame.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			offset = input.Position - frame.AbsolutePosition
+		end
+	end)
+	frame.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+			frame.Position = UDim2.new(0, input.Position.X - offset.X, 0, input.Position.Y - offset.Y)
+		end
+	end)
 end
 
-local function createTab(tabName)
-	if tabs[tabName] then return end
+function UILibrary:CreateDropdown(tabName)
+	local tabButton = Instance.new("TextButton")
+	tabButton.Size = UDim2.new(0, 120, 0, 30)
+	tabButton.Position = UDim2.new(0, 100, 0, 100)
+	tabButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	tabButton.TextColor3 = Color3.new(1, 1, 1)
+	tabButton.Font = Enum.Font.Gotham
+	tabButton.TextSize = 14
+	tabButton.Text = tabName
+	tabButton.AutoButtonColor = true
+	tabButton.Parent = MainGui
 
-	-- Create tab button
-	local button = Instance.new("TextButton")
-	button.Text = tabName
-	button.Size = UDim2.new(0, 120, 0, 30)
-	button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-	button.TextColor3 = Color3.new(1, 1, 1)
-	button.Font = Enum.Font.SourceSans
-	button.TextSize = 16
-	button.BorderSizePixel = 0
-	button.AutoButtonColor = false
-	button.Parent = tabContainer
+	local content = Instance.new("Frame")
+	content.Size = UDim2.new(0, 120, 0, 0)
+	content.Position = UDim2.new(0, 100, 0, 130)
+	content.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	content.ClipsDescendants = true
+	content.BorderSizePixel = 0
+	content.Visible = true
+	content.Parent = MainGui
 
-	-- Create content frame
-	local tabContent = Instance.new("Frame")
-	tabContent.Name = tabName .. "_Content"
-	tabContent.Size = UDim2.new(1, 0, 1, 0)
-	tabContent.Position = UDim2.new(0, 0, 0, 0)
-	tabContent.BackgroundTransparency = 1
-	tabContent.Visible = false
-	tabContent.Parent = contentFrame
+	local layout = Instance.new("UIListLayout")
+	layout.Padding = UDim.new(0, 4)
+	layout.SortOrder = Enum.SortOrder.LayoutOrder
+	layout.Parent = content
 
-	-- Save reference
-	tabs[tabName] = {
-		button = button,
-		content = tabContent
-	}
+	local open = false
 
-	-- Button click switches tab
-	button.MouseButton1Click:Connect(function()
-		switchTab(tabName)
+	tabButton.MouseButton1Click:Connect(function()
+		open = not open
+		local goalSize = open and UDim2.new(0, 120, 0, layout.AbsoluteContentSize.Y + 8) or UDim2.new(0, 120, 0, 0)
+		TweenService:Create(content, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {Size = goalSize}):Play()
 	end)
 
-	-- Default to first tab
-	if not next(tabs, tabName) then
-		switchTab(tabName)
+	makeDraggable(tabButton)
+
+	local tabFunctions = {}
+
+	function tabFunctions:AddButton(text, callback)
+		local button = Instance.new("TextButton")
+		button.Size = UDim2.new(1, 0, 0, 24)
+		button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+		button.TextColor3 = Color3.new(1, 1, 1)
+		button.Font = Enum.Font.Gotham
+		button.TextSize = 12
+		button.Text = text
+		button.Parent = content
+		button.MouseButton1Click:Connect(callback)
 	end
 
-	return tabContent
+	function tabFunctions:AddToggle(text, default, callback)
+		local toggle = Instance.new("TextButton")
+		toggle.Size = UDim2.new(1, 0, 0, 24)
+		toggle.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+		toggle.TextColor3 = Color3.new(1, 1, 1)
+		toggle.Font = Enum.Font.Gotham
+		toggle.TextSize = 12
+		toggle.Text = text .. (default and " [ON]" or " [OFF]")
+		toggle.Parent = content
+		local state = default
+		toggle.MouseButton1Click:Connect(function()
+			state = not state
+			toggle.Text = text .. (state and " [ON]" or " [OFF]")
+			callback(state)
+		end)
+	end
+
+	function tabFunctions:AddSlider(text, min, max, default, callback)
+		local frame = Instance.new("Frame")
+		frame.Size = UDim2.new(1, 0, 0, 24)
+		frame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+		frame.Parent = content
+
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, 0, 1, 0)
+		label.BackgroundTransparency = 1
+		label.TextColor3 = Color3.new(1, 1, 1)
+		label.Font = Enum.Font.Gotham
+		label.TextSize = 12
+		label.Text = text .. ": " .. default
+		label.TextXAlignment = Enum.TextXAlignment.Left
+		label.Parent = frame
+
+		local sliderValue = default
+
+		frame.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				local con
+				con = UserInputService.InputChanged:Connect(function(move)
+					if move.UserInputType == Enum.UserInputType.MouseMovement then
+						local rel = (move.Position.X - frame.AbsolutePosition.X) / frame.AbsoluteSize.X
+						rel = math.clamp(rel, 0, 1)
+						local val = math.floor(min + (max - min) * rel)
+						sliderValue = val
+						label.Text = text .. ": " .. val
+						callback(val)
+					end
+				end)
+				input.Changed:Connect(function()
+					if input.UserInputState == Enum.UserInputState.End then
+						con:Disconnect()
+					end
+				end)
+			end
+		end)
+	end
+
+	return tabFunctions
 end
 
--- Example usage:
-do
-	local home = createTab("Home")
-	local lbl = Instance.new("TextLabel")
-	lbl.Text = "Welcome to the Home Tab"
-	lbl.TextColor3 = Color3.new(1, 1, 1)
-	lbl.BackgroundTransparency = 1
-	lbl.Font = Enum.Font.SourceSansBold
-	lbl.TextSize = 22
-	lbl.Size = UDim2.new(1, 0, 0, 50)
-	lbl.Position = UDim2.new(0, 0, 0, 10)
-	lbl.Parent = home
-end
-
-do
-	local settings = createTab("Settings")
-	local lbl = Instance.new("TextLabel")
-	lbl.Text = "Settings go here"
-	lbl.TextColor3 = Color3.new(1, 1, 1)
-	lbl.BackgroundTransparency = 1
-	lbl.Font = Enum.Font.SourceSansBold
-	lbl.TextSize = 22
-	lbl.Size = UDim2.new(1, 0, 0, 50)
-	lbl.Position = UDim2.new(0, 0, 0, 10)
-	lbl.Parent = settings
-end
-
--- Add more tabs like this:
--- local tab = createTab("Inventory")
--- ... tab.Parent = ...
-
+return UILibrary
