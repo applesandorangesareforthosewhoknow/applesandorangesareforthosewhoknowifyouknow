@@ -52,22 +52,31 @@ function UILibrary:CreateDropdown(tabName, position)
 	container.Parent = MainGui
 
 	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, 0, 1, 0) -- full container size, acts as background
+	label.Name = "BackgroundLabel"
+	label.Size = UDim2.new(1, 0, 1, 0) -- full container size
 	label.Position = UDim2.new(0, 0, 0, 0)
 	label.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 	label.BorderSizePixel = 0
-	label.TextColor3 = Color3.new(1, 1, 1)
-	label.Font = Enum.Font.Gotham
-	label.TextSize = 14
-	label.Text = tabName
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.RichText = true
+	label.Text = ""
 	label.Parent = container
+
+	local textLabel = Instance.new("TextLabel")
+	textLabel.Name = "TextLabel"
+	textLabel.Size = UDim2.new(1, -30, 1, 0) -- full width minus arrow button width
+	textLabel.Position = UDim2.new(0, 0, 0, 0)
+	textLabel.BackgroundTransparency = 1
+	textLabel.TextColor3 = Color3.new(1, 1, 1)
+	textLabel.Font = Enum.Font.Gotham
+	textLabel.TextSize = 14
+	textLabel.Text = tabName
+	textLabel.TextXAlignment = Enum.TextXAlignment.Left
+	textLabel.RichText = true
+	textLabel.Parent = container
 
 	local arrow = Instance.new("TextButton")
 	arrow.Size = UDim2.new(0, 30, 1, 0)
 	arrow.Position = UDim2.new(1, -30, 0, 0)
-	arrow.BackgroundTransparency = 1 -- fully transparent background
+	arrow.BackgroundTransparency = 1
 	arrow.BorderSizePixel = 0
 	arrow.Text = "▼"
 	arrow.TextColor3 = Color3.new(1, 1, 1)
@@ -79,7 +88,7 @@ function UILibrary:CreateDropdown(tabName, position)
 	makeDraggable(container)
 
 	local dropdown = Instance.new("Frame")
-	dropdown.Size = UDim2.new(0, container.AbsoluteSize.X, 0, 0) -- full container width
+	dropdown.Size = UDim2.new(0, container.AbsoluteSize.X, 0, 0)
 	dropdown.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	dropdown.ClipsDescendants = true
 	dropdown.Parent = MainGui
