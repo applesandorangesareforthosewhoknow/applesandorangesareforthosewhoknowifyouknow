@@ -80,26 +80,15 @@ function UILibrary:CreateDropdown(tabName, position)
 
 	local dropdown = Instance.new("Frame")
 	dropdown.Size = UDim2.new(1, 0, 0, 0)
-	dropdown.Position = UDim2.new(0, container.AbsolutePosition.X, 0, container.AbsolutePosition.Y + container.AbsoluteSize.Y)
+	dropdown.Position = UDim2.new(0, 0, 1, 0)
 	dropdown.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	dropdown.ClipsDescendants = true
-	dropdown.Parent = MainGui
+	dropdown.Parent = container
 
 	local layout = Instance.new("UIListLayout")
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.Padding = UDim.new(0, 0)
 	layout.Parent = dropdown
-
-	-- Ensure dropdown always matches container width
-	local function updateDropdownPos()
-		dropdown.Position = UDim2.new(0, container.AbsolutePosition.X, 0, container.AbsolutePosition.Y + container.AbsoluteSize.Y)
-		dropdown.Size = UDim2.new(0, container.AbsoluteSize.X, 0, dropdown.Size.Y.Offset)
-	end
-
-	container:GetPropertyChangedSignal("AbsolutePosition"):Connect(updateDropdownPos)
-	container:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateDropdownPos)
-
-	updateDropdownPos()
 
 	local open = false
 
@@ -110,7 +99,9 @@ function UILibrary:CreateDropdown(tabName, position)
 	arrow.MouseButton1Click:Connect(function()
 		open = not open
 		local targetHeight = open and layout.AbsoluteContentSize.Y or 0
-		TweenService:Create(dropdown, TweenInfo.new(0.25), {Size = UDim2.new(0, container.AbsoluteSize.X, 0, targetHeight)}):Play()
+		TweenService:Create(dropdown, TweenInfo.new(0.25), {
+			Size = UDim2.new(1, 0, 0, targetHeight)
+		}):Play()
 		rotateArrow(open and 180 or 0)
 	end)
 
