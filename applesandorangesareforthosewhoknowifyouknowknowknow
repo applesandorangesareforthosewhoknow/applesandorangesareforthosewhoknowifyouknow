@@ -81,8 +81,8 @@ function UILibrary:CreateDropdown(tabName, position)
 	makeDraggable(container)
 
 	local dropdown = Instance.new("Frame")
-	dropdown.Size = UDim2.new(1, 0, 0, 0)
-	dropdown.Position = UDim2.new(0, 0, 1, 0)
+	dropdown.Size = UDim2.new(0, container.AbsoluteSize.X, 0, 0) -- width same as container width
+	dropdown.Position = UDim2.new(0, 0, 1, 0) -- directly below container
 	dropdown.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	dropdown.ClipsDescendants = true
 	dropdown.Parent = container
@@ -92,6 +92,11 @@ function UILibrary:CreateDropdown(tabName, position)
 	layout.Padding = UDim.new(0, 4)
 	layout.Parent = dropdown
 
+	-- Keep dropdown width synced with container width on resize (e.g. drag)
+	container:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		dropdown.Size = UDim2.new(0, container.AbsoluteSize.X, dropdown.Size.Y.Scale, dropdown.Size.Y.Offset)
+	end)
+
 	local open = false
 
 	local function rotateArrow(deg)
@@ -100,8 +105,8 @@ function UILibrary:CreateDropdown(tabName, position)
 
 	arrow.MouseButton1Click:Connect(function()
 		open = not open
-		local targetSize = open and UDim2.new(0, label.AbsoluteSize.X + arrow.AbsoluteSize.X, 0, layout.AbsoluteContentSize.Y + 8) or UDim2.new(0, label.AbsoluteSize.X + arrow.AbsoluteSize.X, 0, 0)
-		TweenService:Create(dropdown, TweenInfo.new(0.25), {Size = targetSize}):Play()
+		local targetHeight = open and layout.AbsoluteContentSize.Y + 8 or 0
+		TweenService:Create(dropdown, TweenInfo.new(0.25), {Size = UDim2.new(0, container.AbsoluteSize.X, 0, targetHeight)}):Play()
 		rotateArrow(open and 180 or 0)
 	end)
 
