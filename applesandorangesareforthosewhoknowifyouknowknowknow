@@ -18,7 +18,7 @@ local function getInputPos(input)
 			return input.Position
 		end
 	end
-	return Vector2.new(0,0)
+	return Vector2.new(0, 0)
 end
 
 local function makeDraggable(frame)
@@ -87,7 +87,7 @@ function UILibrary:CreateDropdown(tabName, position)
 
 	local layout = Instance.new("UIListLayout")
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Padding = UDim.new(0, 0)
+	layout.Padding = UDim.new(0, 0) -- removed padding
 	layout.Parent = dropdown
 
 	local open = false
