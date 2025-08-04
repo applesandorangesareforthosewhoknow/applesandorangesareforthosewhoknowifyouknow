@@ -86,7 +86,6 @@ function UILibrary:CreateDropdown(tabName, position)
 
 	local layout = Instance.new("UIListLayout")
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Padding = UDim.new(0, 4)
 	layout.Parent = dropdown
 
 	local open = false
@@ -106,7 +105,7 @@ function UILibrary:CreateDropdown(tabName, position)
 
 	arrow.MouseButton1Click:Connect(function()
 		open = not open
-		local targetHeight = open and layout.AbsoluteContentSize.Y + 8 or 0
+		local targetHeight = open and layout.AbsoluteContentSize.Y or 0
 		TweenService:Create(dropdown, TweenInfo.new(0.25), {Size = UDim2.new(0, container.AbsoluteSize.X, 0, targetHeight)}):Play()
 		rotateArrow(open and 180 or 0)
 	end)
