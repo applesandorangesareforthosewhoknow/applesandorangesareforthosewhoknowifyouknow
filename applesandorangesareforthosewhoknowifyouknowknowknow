@@ -10,22 +10,36 @@ MainGui.ResetOnSpawn = false
 MainGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 MainGui.Parent = CoreGui
 
+local function getInputPos(input)
+	if input.Position then
+		if typeof(input.Position) == "Vector3" then
+			return Vector2.new(input.Position.X, input.Position.Y)
+		else
+			return input.Position
+		end
+	end
+	return Vector2.new(0,0)
+end
+
 local function makeDraggable(frame)
 	local dragging, offset
+
 	frame.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			dragging = true
-			offset = input.Position - frame.AbsolutePosition
+			offset = getInputPos(input) - frame.AbsolutePosition
 		end
 	end)
+
 	frame.InputEnded:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			dragging = false
 		end
 	end)
+
 	UserInputService.InputChanged:Connect(function(input)
 		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-			frame.Position = UDim2.new(0, input.Position.X - offset.X, 0, input.Position.Y - offset.Y)
+			frame.Position = UDim2.new(0, getInputPos(input).X - offset.X, 0, getInputPos(input).Y - offset.Y)
 		end
 	end)
 end
