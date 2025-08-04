@@ -1,363 +1,180 @@
--- Draggable Vertical Dropdown UI Library for CoreGui
--- Supports toggles, buttons, sliders with keybinds
--- Main title is draggable
--- Usage example included at bottom
+-- Senpai Lib Fork with Keybinds, Centered TextBox, Green Highlight, and Green Slider
 
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
--- CoreGui (assumed exploit environment)
-local CoreGui = game:GetService("CoreGui")
+local SenpaiLib = {}
+SenpaiLib.__index = SenpaiLib
 
-local library = {}
-
--- Utility to create UI elements with properties
-local function create(class, props)
-    local obj = Instance.new(class)
-    for k,v in pairs(props) do
-        obj[k] = v
-    end
-    return obj
-end
-
--- Tween helper
-local function tweenGui(gui, properties, duration)
-    local tweenInfo = TweenInfo.new(duration or 0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local tween = TweenService:Create(gui, tweenInfo, properties)
-    tween:Play()
-    return tween
-end
-
--- Draggable function: dragArea to drag draggableFrame
-local function makeDraggable(dragArea, draggableFrame)
-    local dragging, dragInput, dragStart, startPos
-
-    dragArea.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = draggableFrame.Position
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
+function SenpaiLib:CreateWindow(title, toggleKey)
+    toggleKey = toggleKey or Enum.KeyCode.RightControl -- default keybind
+    
+    local UserInputService = game:GetService("UserInputService")
+    
+    local Window = Instance.new("ScreenGui")
+    Window.Name = "SenpaiLibUI"
+    Window.ResetOnSpawn = false
+    Window.Parent = game:GetService("CoreGui")
+    
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 450, 0, 300)
+    MainFrame.Position = UDim2.new(0.5, -225, 0.5, -150)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = Window
+    
+    -- Title text
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Size = UDim2.new(1, 0, 0, 40)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = title
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.TextSize = 26
+    TitleLabel.TextColor3 = Color3.new(1, 1, 1)
+    TitleLabel.Parent = MainFrame
+    
+    -- Green underline below title
+    local TitleUnderline = Instance.new("Frame")
+    TitleUnderline.Size = UDim2.new(0, TitleLabel.TextBounds.X, 0, 3)
+    TitleUnderline.Position = UDim2.new(0, 10, 0, 38)
+    TitleUnderline.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    TitleUnderline.BorderSizePixel = 0
+    TitleUnderline.Parent = MainFrame
+    
+    -- Container for tabs and content
+    local ContentFrame = Instance.new("Frame")
+    ContentFrame.Size = UDim2.new(1, 0, 1, -40)
+    ContentFrame.Position = UDim2.new(0, 0, 0, 40)
+    ContentFrame.BackgroundTransparency = 1
+    ContentFrame.Parent = MainFrame
+    
+    -- Simple Tab system (skipped for brevity)
+    local Tabs = {}
+    
+    function SenpaiLib:AddTab(tabName)
+        local Tab = {}
+        Tab.Name = tabName
+        Tab.Elements = {}
+        
+        -- Example tab frame (not clickable tabs here)
+        local TabFrame = Instance.new("Frame")
+        TabFrame.Size = UDim2.new(1, 0, 1, 0)
+        TabFrame.BackgroundTransparency = 1
+        TabFrame.Visible = (#Tabs == 0) -- show first tab by default
+        TabFrame.Parent = ContentFrame
+        Tab.Frame = TabFrame
+        
+        function Tab:AddTextBox(text, callback)
+            local TextBoxFrame = Instance.new("Frame")
+            TextBoxFrame.Size = UDim2.new(1, -20, 0, 40)
+            TextBoxFrame.BackgroundTransparency = 1
+            TextBoxFrame.Position = UDim2.new(0, 10, 0, #Tab.Elements * 50)
+            TextBoxFrame.Parent = TabFrame
+            
+            local Label = Instance.new("TextLabel")
+            Label.Size = UDim2.new(0.3, 0, 1, 0)
+            Label.BackgroundTransparency = 1
+            Label.Text = text
+            Label.Font = Enum.Font.Gotham
+            Label.TextSize = 18
+            Label.TextColor3 = Color3.new(1,1,1)
+            Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.Parent = TextBoxFrame
+            
+            local TextBox = Instance.new("TextBox")
+            TextBox.Size = UDim2.new(0.65, 0, 1, 0)
+            TextBox.Position = UDim2.new(0.35, 0, 0, 0)
+            TextBox.BackgroundColor3 = Color3.fromRGB(30,30,30)
+            TextBox.TextColor3 = Color3.new(1,1,1)
+            TextBox.Font = Enum.Font.Gotham
+            TextBox.TextSize = 18
+            TextBox.TextXAlignment = Enum.TextXAlignment.Center -- Centered text
+            TextBox.ClearTextOnFocus = false
+            TextBox.Parent = TextBoxFrame
+            
+            TextBox.FocusLost:Connect(function(enterPressed)
+                if enterPressed then
+                    callback(TextBox.Text)
+                end
+            end)
+            
+            table.insert(Tab.Elements, TextBoxFrame)
+        end
+        
+        function Tab:AddSlider(text, min, max, default, callback)
+            local SliderFrame = Instance.new("Frame")
+            SliderFrame.Size = UDim2.new(1, -20, 0, 50)
+            SliderFrame.BackgroundTransparency = 1
+            SliderFrame.Position = UDim2.new(0, 10, 0, #Tab.Elements * 50)
+            SliderFrame.Parent = TabFrame
+            
+            local Label = Instance.new("TextLabel")
+            Label.Size = UDim2.new(1, 0, 0, 20)
+            Label.BackgroundTransparency = 1
+            Label.Text = text .. ": " .. default
+            Label.Font = Enum.Font.Gotham
+            Label.TextSize = 18
+            Label.TextColor3 = Color3.new(1,1,1)
+            Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.Parent = SliderFrame
+            
+            local SliderBar = Instance.new("Frame")
+            SliderBar.Size = UDim2.new(1, 0, 0, 10)
+            SliderBar.Position = UDim2.new(0, 0, 0, 30)
+            SliderBar.BackgroundColor3 = Color3.fromRGB(40,40,40)
+            SliderBar.Parent = SliderFrame
+            
+            local SliderFill = Instance.new("Frame")
+            SliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+            SliderFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- solid green
+            SliderFill.Parent = SliderBar
+            
+            local dragging = false
+            SliderBar.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = true
+                end
+            end)
+            SliderBar.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
                     dragging = false
                 end
             end)
-        end
-    end)
-
-    dragArea.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            local newPos = UDim2.new(
-                math.clamp(startPos.X.Scale, 0, 1),
-                math.clamp(startPos.X.Offset + delta.X, 0, workspace.CurrentCamera.ViewportSize.X - draggableFrame.AbsoluteSize.X),
-                math.clamp(startPos.Y.Scale, 0, 1),
-                math.clamp(startPos.Y.Offset + delta.Y, 0, workspace.CurrentCamera.ViewportSize.Y - draggableFrame.AbsoluteSize.Y)
-            )
-            draggableFrame.Position = newPos
-        end
-    end)
-end
-
--- Keybind manager to track pressed keys
-local pressedKeys = {}
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.UserInputType == Enum.UserInputType.Keyboard then
-        pressedKeys[input.KeyCode] = true
-    end
-end)
-UserInputService.InputEnded:Connect(function(input, gameProcessed)
-    if input.UserInputType == Enum.UserInputType.Keyboard then
-        pressedKeys[input.KeyCode] = false
-    end
-end)
-
--- Main dropdown creation function
-function library.CreateDropdown(titleText)
-    -- Main container frame
-    local container = create("Frame", {
-        Size = UDim2.new(0, 220, 0, 40),
-        Position = UDim2.new(0.5, -110, 0.5, -20),
-        BackgroundColor3 = Color3.fromRGB(30,30,30),
-        BorderSizePixel = 0,
-        Parent = CoreGui
-    })
-
-    -- Title bar (draggable)
-    local titleBar = create("Frame", {
-        Size = UDim2.new(1, 0, 0, 40),
-        BackgroundColor3 = Color3.fromRGB(40,40,40),
-        Parent = container
-    })
-
-    local titleLabel = create("TextLabel", {
-        Size = UDim2.new(1, -60, 1, 0),
-        Position = UDim2.new(0, 10, 0, 0),
-        BackgroundTransparency = 1,
-        Text = titleText or "Dropdown",
-        TextColor3 = Color3.fromRGB(230,230,230),
-        Font = Enum.Font.SourceSansBold,
-        TextSize = 20,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = titleBar
-    })
-
-    -- Toggle Button (-,+) to expand/collapse dropdown
-    local toggleBtn = create("TextButton", {
-        Size = UDim2.new(0, 40, 1, 0),
-        Position = UDim2.new(1, -50, 0, 0),
-        BackgroundColor3 = Color3.fromRGB(60,60,60),
-        TextColor3 = Color3.fromRGB(230,230,230),
-        Font = Enum.Font.SourceSansBold,
-        TextSize = 24,
-        Text = "+",
-        Parent = titleBar
-    })
-
-    -- Container for dropdown content (hidden initially)
-    local contentFrame = create("Frame", {
-        Size = UDim2.new(1, 0, 0, 0),
-        Position = UDim2.new(0, 0, 1, 0),
-        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-        BorderSizePixel = 0,
-        ClipsDescendants = true,
-        Parent = container
-    })
-
-    local uiList = create("UIListLayout", {
-        Padding = UDim.new(0,6),
-        SortOrder = Enum.SortOrder.LayoutOrder,
-        Parent = contentFrame
-    })
-
-    local elements = {}
-    local contentOpen = false
-
-    local function toggleContent()
-        if contentOpen then
-            tweenGui(contentFrame, {Size = UDim2.new(1, 0, 0, 0)}, 0.3)
-            toggleBtn.Text = "+"
-            contentOpen = false
-        else
-            local contentHeight = 0
-            for _,child in ipairs(contentFrame:GetChildren()) do
-                if child:IsA("Frame") or child:IsA("TextButton") or child:IsA("TextLabel") then
-                    contentHeight = contentHeight + child.AbsoluteSize.Y + uiList.Padding.Offset
-                end
-            end
-            contentHeight = math.max(contentHeight, 100)
-            tweenGui(contentFrame, {Size = UDim2.new(1, 0, 0, contentHeight)}, 0.3)
-            toggleBtn.Text = "-"
-            contentOpen = true
-        end
-    end
-
-    toggleBtn.MouseButton1Click:Connect(toggleContent)
-
-    -- Make title bar draggable
-    makeDraggable(titleBar, container)
-
-    -- Add elements functions
-    local function addToggle(name, default, callback, keybind)
-        local toggleFrame = create("Frame", {
-            Size = UDim2.new(1, -20, 0, 30),
-            BackgroundTransparency = 1,
-            Parent = contentFrame
-        })
-
-        local label = create("TextLabel", {
-            Text = name,
-            Size = UDim2.new(0.7, 0, 1, 0),
-            BackgroundTransparency = 1,
-            TextColor3 = Color3.fromRGB(230,230,230),
-            Font = Enum.Font.SourceSans,
-            TextSize = 18,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            Parent = toggleFrame
-        })
-
-        local toggleBtn = create("TextButton", {
-            Size = UDim2.new(0, 50, 1, 0),
-            Position = UDim2.new(1, -60, 0, 0),
-            BackgroundColor3 = default and Color3.fromRGB(0,170,0) or Color3.fromRGB(80,80,80),
-            Text = default and "ON" or "OFF",
-            TextColor3 = Color3.fromRGB(230,230,230),
-            Font = Enum.Font.SourceSansBold,
-            TextSize = 18,
-            Parent = toggleFrame
-        })
-
-        local toggled = default
-
-        local function updateToggle(state)
-            toggled = state
-            toggleBtn.Text = state and "ON" or "OFF"
-            toggleBtn.BackgroundColor3 = state and Color3.fromRGB(0,170,0) or Color3.fromRGB(80,80,80)
-            if callback then
-                callback(state)
-            end
-        end
-
-        toggleBtn.MouseButton1Click:Connect(function()
-            updateToggle(not toggled)
-        end)
-
-        -- Keybind support
-        if keybind then
-            UserInputService.InputBegan:Connect(function(input, gameProcessed)
-                if not gameProcessed and input.KeyCode == keybind then
-                    updateToggle(not toggled)
+            
+            SliderBar.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    local relativePos = math.clamp(input.Position.X - SliderBar.AbsolutePosition.X, 0, SliderBar.AbsoluteSize.X)
+                    local value = min + (relativePos / SliderBar.AbsoluteSize.X) * (max - min)
+                    value = math.floor(value * 100) / 100
+                    SliderFill.Size = UDim2.new(relativePos / SliderBar.AbsoluteSize.X, 0, 1, 0)
+                    Label.Text = text .. ": " .. tostring(value)
+                    callback(value)
                 end
             end)
+            
+            table.insert(Tab.Elements, SliderFrame)
         end
-
-        return toggleFrame
+        
+        return Tab
     end
-
-    local function addButton(name, callback, keybind)
-        local btn = create("TextButton", {
-            Text = name,
-            Size = UDim2.new(1, -20, 0, 30),
-            BackgroundColor3 = Color3.fromRGB(70,70,70),
-            TextColor3 = Color3.fromRGB(230,230,230),
-            Font = Enum.Font.SourceSansBold,
-            TextSize = 18,
-            Parent = contentFrame
-        })
-
-        btn.MouseButton1Click:Connect(function()
-            if callback then callback() end
-        end)
-
-        -- Keybind support
-        if keybind then
-            UserInputService.InputBegan:Connect(function(input, gameProcessed)
-                if not gameProcessed and input.KeyCode == keybind then
-                    if callback then callback() end
-                end
-            end)
+    
+    -- Toggle visibility with keybind
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed and input.KeyCode == toggleKey then
+            Window.Enabled = not Window.Enabled
         end
-
-        return btn
-    end
-
-    local function addSlider(name, min, max, default, callback)
-        local sliderFrame = create("Frame", {
-            Size = UDim2.new(1, -20, 0, 40),
-            BackgroundTransparency = 1,
-            Parent = contentFrame
-        })
-
-        local label = create("TextLabel", {
-            Text = name .. ": " .. tostring(default),
-            Size = UDim2.new(1, 0, 0, 20),
-            BackgroundTransparency = 1,
-            TextColor3 = Color3.fromRGB(230,230,230),
-            Font = Enum.Font.SourceSans,
-            TextSize = 16,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            Parent = sliderFrame
-        })
-
-        local bar = create("Frame", {
-            Size = UDim2.new(1, 0, 0, 10),
-            Position = UDim2.new(0, 0, 0, 25),
-            BackgroundColor3 = Color3.fromRGB(70,70,70),
-            Parent = sliderFrame
-        })
-
-        local fill = create("Frame", {
-            Size = UDim2.new((default - min) / (max - min), 0, 1, 0),
-            BackgroundColor3 = Color3.fromRGB(0, 170, 255),
-            Parent = bar
-        })
-
-        local dragging = false
-
-        local function updateValue(inputPosX)
-            local relativeX = math.clamp(inputPosX - bar.AbsolutePosition.X, 0, bar.AbsoluteSize.X)
-            local percent = relativeX / bar.AbsoluteSize.X
-            local value = math.floor(min + percent * (max - min))
-            fill.Size = UDim2.new(percent, 0, 1, 0)
-            label.Text = name .. ": " .. tostring(value)
-            if callback then callback(value) end
+    end)
+    
+    return setmetatable({
+        Window = Window,
+        MainFrame = MainFrame,
+        Tabs = Tabs,
+        AddTab = function(self, ...) 
+            local tab = self:AddTab(...)
+            table.insert(self.Tabs, tab)
+            return tab
         end
-
-        bar.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = true
-                updateValue(input.Position.X)
-            end
-        end)
-
-        bar.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = false
-            end
-        end)
-
-        UserInputService.InputChanged:Connect(function(input)
-            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                updateValue(input.Position.X)
-            end
-        end)
-
-        return sliderFrame
-    end
-
-    -- Public API to add UI elements
-    local api = {}
-
-    function api:AddToggle(name, default, callback, keybind)
-        local t = addToggle(name, default, callback, keybind)
-        t.Parent = contentFrame
-        return t
-    end
-
-    function api:AddButton(name, callback, keybind)
-        local b = addButton(name, callback, keybind)
-        b.Parent = contentFrame
-        return b
-    end
-
-    function api:AddSlider(name, min, max, default, callback)
-        local s = addSlider(name, min, max, default, callback)
-        s.Parent = contentFrame
-        return s
-    end
-
-    -- Return the api and container
-    return api, container
+    }, SenpaiLib)
 end
 
-return library
-
---[[ Usage example:
-
-local uiLib = require(path_to_this_module)
-
-local dropdown, container = uiLib.CreateDropdown("Example UI")
-
-dropdown:AddToggle("Godmode", false, function(state)
-    print("Godmode toggled:", state)
-end, Enum.KeyCode.G)
-
-dropdown:AddButton("Respawn", function()
-    print("Respawn clicked")
-end, Enum.KeyCode.R)
-
-dropdown:AddSlider("Speed", 16, 100, 16, function(val)
-    print("Speed set to", val)
-end)
-
-container.Position = UDim2.new(0.1, 0, 0.1, 0) -- reposition as needed
-
-]]
+return SenpaiLib
